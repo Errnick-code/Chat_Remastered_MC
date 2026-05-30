@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "chatimage",
+  "id": "chat-remastered",
   "version": "${version}",
-  "name": "ChatImage",
-  "description": "Send images in Minecraft chat. Both players need the mod.",
+  "name": "Chat Remastered",
+  "description": "Enhances Minecraft chat with image sharing, fullscreen chat mode, customizable chat height, and more.",
   "authors": ["Errnick_"],
   "license": "MIT",
   "icon": "icon.png",
@@ -12,18 +12,18 @@
     "main": [
       {
         "adapter": "kotlin",
-        "value": "dev.errnicraft.chatimage.ChatImageMod"
+        "value": "dev.errnicraft.chatremastered.ChatRemasteredMod"
       }
     ],
     "client": [
       {
         "adapter": "kotlin",
-        "value": "dev.errnicraft.chatimage.ChatImageClient"
+        "value": "dev.errnicraft.chatremastered.ChatRemasteredClient"
       }
     ]
   },
   "mixins": [
-    "chatimage.client.mixins.json"
+    "chat-remastered.client.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.18.0",
