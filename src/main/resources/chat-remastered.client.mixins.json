@@ -12,7 +12,9 @@
     "ChatHistoryMixin",
     "ChatUniqueTimeMixin",
     "ScreenAccessor",
-    "ChatSuppressMixin"
+    "ChatSuppressMixin",
+    "CommandSuggestionsAccessor",
+    "ScreenshotMetadataMixin"
   ],
   "injectors": {
     "defaultRequire": 1

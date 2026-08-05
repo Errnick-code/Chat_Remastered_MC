@@ -5,12 +5,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-/**
- * Убирает лимит истории чата (100 сообщений) — делает его практически безлимитным.
- *
- * Заменяем константу 100 в addMessageToQueue и addMessageToDisplayQueue
- * на MAX_HISTORY через @ModifyConstant.
- */
 @Mixin(ChatComponent.class)
 public class ChatHistoryMixin {
 

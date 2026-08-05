@@ -4,22 +4,18 @@
   "version": "${version}",
   "name": "Chat Remastered",
   "description": "Enhances Minecraft chat with image sharing, fullscreen chat mode, customizable chat height, and more.",
-  "authors": ["Errnick_"],
+  "authors": [
+    "Errnick_"
+  ],
   "license": "MIT",
   "icon": "icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      {
-        "adapter": "kotlin",
-        "value": "dev.errnicraft.chatremastered.ChatRemasteredMod"
-      }
+      "dev.errnicraft.chatremastered.ChatRemasteredMod"
     ],
     "client": [
-      {
-        "adapter": "kotlin",
-        "value": "dev.errnicraft.chatremastered.ChatRemasteredClient"
-      }
+      "dev.errnicraft.chatremastered.ChatRemasteredClient"
     ]
   },
   "mixins": [
@@ -28,7 +24,7 @@
   "depends": {
     "fabricloader": ">=0.18.0",
     "fabric-api": "*",
-    "fabric-language-kotlin": ">=1.13.0+kotlin.2.3.20",
+    "cloth-config": "*",
     "minecraft": "~1.21.11"
   }
 }
