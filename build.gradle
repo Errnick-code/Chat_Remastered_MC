@@ -1,49 +1,34 @@
-plugins {
-    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
-    id 'maven-publish'
+allprojects {
+    group = project.maven_group
+    version = "${project.mod_version}+${findVersionSuffix(project)}"
 }
 
-version = project.mod_version
-group = project.maven_group
-
-base {
-    archivesName = project.archives_base_name
+String findVersionSuffix(Project p) {
+    if (p == rootProject) return project.protocol_version
+    def parts = p.path.split(':')
+    return parts.length > 1 ? parts[1].tokenize('-').last() : project.protocol_version
 }
 
-loom {
-    splitEnvironmentSourceSets()
-
-    mods {
-        "chat-remastered" {
-            sourceSet sourceSets.main
-            sourceSet sourceSets.client
-        }
-    }
+tasks.register('buildAll') {
+    group = 'chat-remastered'
+    description = 'Builds jars for every registered loader/version combination.'
+    dependsOn subprojects.findAll { it.tasks.findByName('build') != null }.collect { "${it.path}:build" }
 }
 
-repositories {
-    maven { url "https://maven.shedaniel.me/" }
+tasks.register('buildFabric') {
+    group = 'chat-remastered'
+    description = 'Builds jars for every Fabric version.'
+    dependsOn subprojects.findAll { it.path.startsWith(':fabric-') }.collect { "${it.path}:build" }
 }
 
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_version}") {
-        exclude(group: "net.fabricmc.fabric-api")
-    }
+tasks.register('buildForge') {
+    group = 'chat-remastered'
+    description = 'Builds jars for every Forge version.'
+    dependsOn subprojects.findAll { it.path.startsWith(':forge-') }.collect { "${it.path}:build" }
 }
 
-processResources {
-    inputs.property "version", project.version
-    filesMatching("fabric.mod.json") {
-        expand "version": inputs.properties.version
-    }
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${project.base.archivesName}" }
-    }
+tasks.register('buildNeoForge') {
+    group = 'chat-remastered'
+    description = 'Builds jars for every NeoForge version.'
+    dependsOn subprojects.findAll { it.path.startsWith(':neoforge-') }.collect { "${it.path}:build" }
 }
