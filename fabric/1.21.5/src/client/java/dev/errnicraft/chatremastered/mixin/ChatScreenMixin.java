@@ -262,6 +262,15 @@ public class ChatScreenMixin {
         ChatScreen self = (ChatScreen)(Object)this;
         Minecraft mc = Minecraft.getInstance();
 
+        // NOTE: the images/replies/entities/items chat overlays are drawn
+        // separately, from ChatRemasteredClient's ScreenEvents.afterRender
+        // hook, not here. Drawing them at this method's own TAIL is not
+        // actually the last thing painted in the frame — vanilla chat text
+        // can still be drawn afterward — so they're deferred to that hook
+        // instead, which Fabric guarantees runs after the screen has fully
+        // finished rendering.
+
+
         int inputBarTop = self.height - 12;
         int camBtnX = self.width - CAM_BTN_W - 2;
         int camBtnY = inputBarTop - CAM_BTN_H - 4;
@@ -443,6 +452,15 @@ public class ChatScreenMixin {
                     (parsed == null && parsedEntity == null && parsedItem == null && parsedHandItem == null
                             && parsedLookEntity == null && parsedShortPlayer == null)
                             ? dev.errnicraft.chatremastered.EntityChatParser.parseUuid(rawValue) : null;
+            dev.errnicraft.chatremastered.EntityChatParser.ParsedBlockCommand parsedBlock =
+                    (parsed == null && parsedEntity == null && parsedItem == null && parsedHandItem == null
+                            && parsedLookEntity == null && parsedShortPlayer == null && parsedUuid == null)
+                            ? dev.errnicraft.chatremastered.EntityChatParser.parseBlock(rawValue) : null;
+            dev.errnicraft.chatremastered.EntityChatParser.ParsedLookBlockCommand parsedLookBlock =
+                    (parsed == null && parsedEntity == null && parsedItem == null && parsedHandItem == null
+                            && parsedLookEntity == null && parsedShortPlayer == null && parsedUuid == null
+                            && parsedBlock == null)
+                            ? dev.errnicraft.chatremastered.EntityChatParser.parseLookBlock(rawValue) : null;
             if (parsed != null) {
                 if (ChatRemasteredConfig.getMuted()) {
                     net.minecraft.client.Minecraft.getInstance().gui.getChat().addMessage(
@@ -621,6 +639,79 @@ public class ChatScreenMixin {
                 net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
                         new dev.errnicraft.chatremastered.network.packet.EntityByUuidChatPacket(
                                 parsedUuid.uuid(), parsedUuid.caption())
+                );
+                net.minecraft.client.Minecraft.getInstance().gui.getChat().addRecentChat(rawValue);
+                input.setValue("");
+                cr$resetTagSuggestions();
+                cr$clearReply();
+                cir.setReturnValue(true);
+                return;
+            }
+            if (parsedBlock != null) {
+                if (ChatRemasteredConfig.getMuted()) {
+                    net.minecraft.client.Minecraft.getInstance().gui.getChat().addMessage(
+                            net.minecraft.network.chat.Component.literal("§c[Chat Remastered] " +
+                                    ChatRemasteredConfig.tr("chat-remastered.muted"))
+                    );
+                    cir.setReturnValue(true);
+                    return;
+                }
+                net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                        new dev.errnicraft.chatremastered.network.packet.BlockChatPacket(
+                                parsedBlock.blockNamespace(), parsedBlock.blockPath(), parsedBlock.blockState(),
+                                parsedBlock.caption())
+                );
+                net.minecraft.client.Minecraft.getInstance().gui.getChat().addRecentChat(rawValue);
+                input.setValue("");
+                cr$resetTagSuggestions();
+                cr$clearReply();
+                cir.setReturnValue(true);
+                return;
+            }
+            if (parsedLookBlock != null) {
+                if (ChatRemasteredConfig.getMuted()) {
+                    net.minecraft.client.Minecraft.getInstance().gui.getChat().addMessage(
+                            net.minecraft.network.chat.Component.literal("§c[Chat Remastered] " +
+                                    ChatRemasteredConfig.tr("chat-remastered.muted"))
+                    );
+                    cir.setReturnValue(true);
+                    return;
+                }
+                net.minecraft.client.Minecraft lookBlockMc = net.minecraft.client.Minecraft.getInstance();
+                if (lookBlockMc.level == null) {
+                    cir.setReturnValue(true);
+                    return;
+                }
+                net.minecraft.world.phys.HitResult lookBlockHit = lookBlockMc.hitResult;
+                if (lookBlockHit == null || lookBlockHit.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK) {
+                    cir.setReturnValue(true);
+                    return;
+                }
+                net.minecraft.core.BlockPos lookBlockPos =
+                        ((net.minecraft.world.phys.BlockHitResult) lookBlockHit).getBlockPos();
+                net.minecraft.world.level.block.state.BlockState lookBlockState =
+                        lookBlockMc.level.getBlockState(lookBlockPos);
+                if (lookBlockState.isAir()) {
+                    cir.setReturnValue(true);
+                    return;
+                }
+                net.minecraft.resources.ResourceLocation lookBlockId =
+                        net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(lookBlockState.getBlock());
+                String lookBlockStateString = "";
+                try {
+                    net.minecraft.resources.RegistryOps<net.minecraft.nbt.Tag> ops =
+                            lookBlockMc.level.registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE);
+                    net.minecraft.nbt.Tag blockTag =
+                            net.minecraft.world.level.block.state.BlockState.CODEC.encodeStart(ops, lookBlockState).getOrThrow();
+                    if (blockTag instanceof net.minecraft.nbt.CompoundTag compound) {
+                        lookBlockStateString = compound.toString();
+                    }
+                } catch (Exception ignored) {
+                }
+                net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                        new dev.errnicraft.chatremastered.network.packet.BlockChatPacket(
+                                lookBlockId.getNamespace(), lookBlockId.getPath(), lookBlockStateString,
+                                parsedLookBlock.caption())
                 );
                 net.minecraft.client.Minecraft.getInstance().gui.getChat().addRecentChat(rawValue);
                 input.setValue("");

@@ -7,6 +7,7 @@ import dev.errnicraft.chatremastered.server.ImageReadyBridge;
 import dev.errnicraft.chatremastered.server.command.AdminCommand;
 import dev.errnicraft.chatremastered.server.command.VersionCommand;
 import dev.errnicraft.chatremastered.server.network.AdminDeleteImageHandler;
+import dev.errnicraft.chatremastered.server.network.BlockChatHandler;
 import dev.errnicraft.chatremastered.server.network.DeleteImageHandler;
 import dev.errnicraft.chatremastered.server.network.HandshakeHandler;
 import dev.errnicraft.chatremastered.server.network.ImageUploadHandler;
@@ -33,6 +34,7 @@ public final class ChatRemasteredMod implements ModInitializer {
         EntityMobChatHandler.register();
         EntityByUuidChatHandler.register();
         ItemChatHandler.register();
+        BlockChatHandler.register();
         DeleteImageHandler.register();
         AdminDeleteImageHandler.register();
 

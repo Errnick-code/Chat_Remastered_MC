@@ -296,6 +296,10 @@ public final class ChatRemasteredStore {
         public final String itemPath;
         public final String itemNbt;
 
+        public final String blockNamespace;
+        public final String blockPath;
+        public final String blockState;
+
         public transient Object cachedItemStack = null;
 
         public float rotateAngleDeg = 0.0f;
@@ -316,7 +320,7 @@ public final class ChatRemasteredStore {
         public EntityMessage(String sender, Component senderComponent, String targetPlayerName,
                               String behavior, String caption, int addedTime) {
             this(sender, senderComponent, targetPlayerName, null, null, null, behavior,
-                    -1, 0, 0, caption, addedTime);
+                    -1, 0, 0, caption, addedTime, null, null, null, null, null, null);
         }
 
         public EntityMessage(String sender, Component senderComponent, String targetPlayerName,
@@ -324,21 +328,32 @@ public final class ChatRemasteredStore {
                               String behavior, int customSize, int offsetX, int offsetY,
                               String caption, int addedTime) {
             this(sender, senderComponent, targetPlayerName, entityNamespace, entityPath, entityNbt,
-                    behavior, customSize, offsetX, offsetY, caption, addedTime, null, null, null);
+                    behavior, customSize, offsetX, offsetY, caption, addedTime, null, null, null,
+                    null, null, null);
         }
 
         public EntityMessage(String sender, Component senderComponent,
                               String itemNamespace, String itemPath, String itemNbt,
                               String caption, int addedTime) {
             this(sender, senderComponent, null, null, null, null,
-                    "rotate", -1, 0, 0, caption, addedTime, itemNamespace, itemPath, itemNbt);
+                    "rotate", -1, 0, 0, caption, addedTime, itemNamespace, itemPath, itemNbt,
+                    null, null, null);
+        }
+
+        public EntityMessage(String sender, Component senderComponent,
+                              String blockNamespace, String blockPath, String blockState,
+                              String caption, int addedTime, boolean blockMode) {
+            this(sender, senderComponent, null, null, null, null,
+                    "rotate", -1, 0, 0, caption, addedTime, null, null, null,
+                    blockNamespace, blockPath, blockState);
         }
 
         private EntityMessage(String sender, Component senderComponent, String targetPlayerName,
                                String entityNamespace, String entityPath, String entityNbt,
                                String behavior, int customSize, int offsetX, int offsetY,
                                String caption, int addedTime,
-                               String itemNamespace, String itemPath, String itemNbt) {
+                               String itemNamespace, String itemPath, String itemNbt,
+                               String blockNamespace, String blockPath, String blockState) {
             this.sender = sender;
             this.senderComponent = senderComponent;
             this.targetPlayerName = targetPlayerName;
@@ -354,6 +369,9 @@ public final class ChatRemasteredStore {
             this.itemNamespace = itemNamespace;
             this.itemPath = itemPath;
             this.itemNbt = itemNbt;
+            this.blockNamespace = blockNamespace;
+            this.blockPath = blockPath;
+            this.blockState = blockState;
         }
 
         public boolean isEntityMode() {
@@ -364,6 +382,15 @@ public final class ChatRemasteredStore {
         public boolean isItemMode() {
             return itemNamespace != null && !itemNamespace.isEmpty()
                     && itemPath != null && !itemPath.isEmpty();
+        }
+
+        public boolean isBlockMode() {
+            return blockNamespace != null && !blockNamespace.isEmpty()
+                    && blockPath != null && !blockPath.isEmpty();
+        }
+
+        public String getBlockState() {
+            return blockState != null ? blockState : "";
         }
 
         public void setScreenBounds(int x0, int y0, int x1, int y1) {
@@ -411,6 +438,11 @@ public final class ChatRemasteredStore {
         }
 
         public String buildFullCode() {
+            if (isBlockMode()) {
+                String state = blockState != null && !blockState.isEmpty() ? blockState : "";
+                return "<chat_remastered:block:" + blockNamespace + ":" + blockPath + state + ">"
+                        + (caption != null && !caption.isEmpty() ? " " + caption : "");
+            }
             if (isItemMode()) {
                 String nbt = itemNbt != null ? itemNbt : "";
                 return "<chat_remastered:item:" + itemNamespace + ":" + itemPath + nbt + ">"
@@ -704,6 +736,16 @@ public final class ChatRemasteredStore {
                                                      String caption, int addedTime) {
         entityMessages.addLast(new EntityMessage(sender, senderComponent,
                 itemNamespace, itemPath, itemNbt, caption, addedTime));
+        if (entityMessages.size() > MAX_ENTITY_MESSAGES) {
+            entityMessages.removeFirst();
+        }
+    }
+
+    public static synchronized void addBlockMessage(String sender, Component senderComponent,
+                                                      String blockNamespace, String blockPath, String blockState,
+                                                      String caption, int addedTime) {
+        entityMessages.addLast(new EntityMessage(sender, senderComponent,
+                blockNamespace, blockPath, blockState, caption, addedTime, true));
         if (entityMessages.size() > MAX_ENTITY_MESSAGES) {
             entityMessages.removeFirst();
         }

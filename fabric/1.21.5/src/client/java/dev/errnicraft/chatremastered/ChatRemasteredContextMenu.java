@@ -107,12 +107,12 @@ public class ChatRemasteredContextMenu extends Screen {
         float t = Math.min(elapsed / ANIM_MS, 1f);
         float ease = 1f - (1f - t) * (1f - t);
 
-        graphics.pose().pushMatrix();
+        graphics.pose().pushPose();
         float cx = menuX + ITEM_W / 2f;
         float cy = menuY;
-        graphics.pose().translate(cx, cy);
-        graphics.pose().scale(ease, ease);
-        graphics.pose().translate(-cx, -cy);
+        graphics.pose().translate(cx, cy, 0f);
+        graphics.pose().scale(ease, ease, 1f);
+        graphics.pose().translate(-cx, -cy, 0f);
 
         graphics.fill(menuX + 3, menuY + 3, menuX + ITEM_W + 3, menuY + menuH + 3, 0x44000000);
         graphics.fill(menuX + 2, menuY + 2, menuX + ITEM_W + 2, menuY + menuH + 2, 0x22000000);
@@ -148,7 +148,7 @@ public class ChatRemasteredContextMenu extends Screen {
             graphics.drawString(mc.font, item.getLabel(), textX, textY, textColor, false);
         }
 
-        graphics.pose().popMatrix();
+        graphics.pose().popPose();
     }
 
     private int lerpColor(int from, int to, float t) {

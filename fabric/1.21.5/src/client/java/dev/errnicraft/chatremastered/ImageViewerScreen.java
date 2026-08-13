@@ -251,9 +251,9 @@ public class ImageViewerScreen extends Screen {
         int x = baseX + Math.round(panX);
         int y = baseY + Math.round(panY);
 
-        guiGraphics.pose().pushMatrix();
-        guiGraphics.pose().translate((float) x, (float) y);
-        guiGraphics.pose().scale(s, s);
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate((float) x, (float) y, 0f);
+        guiGraphics.pose().scale(s, s, 1f);
         guiGraphics.blit(
                 RenderType::guiTextured,
                 texId,
@@ -263,7 +263,7 @@ public class ImageViewerScreen extends Screen {
                 texW, texH,
                 -1
         );
-        guiGraphics.pose().popMatrix();
+        guiGraphics.pose().popPose();
 
         int barY = height - barH;
         guiGraphics.fill(0, barY, width, height, (int) 0xBB000000);
@@ -434,6 +434,14 @@ public class ImageViewerScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    }
+
+    @Override
+    protected void renderBlurredBackground() {
     }
 
     @Override

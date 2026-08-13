@@ -2,7 +2,6 @@ package dev.errnicraft.chatremastered.client;
 
 import dev.errnicraft.chatremastered.ChatRemasteredConfig;
 import dev.errnicraft.chatremastered.ImageCache;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 
@@ -18,7 +17,7 @@ public final class ChatComponentTooltipHelper {
     private ChatComponentTooltipHelper() {
     }
 
-    public static void appendMetadataLines(List<ClientTooltipComponent> lines, String imageId) {
+    public static void appendMetadataLines(List<Component> lines, String imageId) {
         byte[] fullBytes = ImageCache.getFullData(imageId);
         if (fullBytes == null) {
             return;
@@ -50,30 +49,30 @@ public final class ChatComponentTooltipHelper {
         }
     }
 
-    private static void addLine(List<ClientTooltipComponent> lines, String title, String value) {
+    private static void addLine(List<Component> lines, String title, String value) {
         Component titleComp = Component.literal(title + ": ").setStyle(Style.EMPTY.withColor(COLOR_TITLE));
         Component valueComp = Component.literal(value).setStyle(Style.EMPTY.withColor(COLOR_VALUE));
-        lines.add(ClientTooltipComponent.create(titleComp.copy().append(valueComp).getVisualOrderText()));
+        lines.add(titleComp.copy().append(valueComp));
     }
 
-    private static void addResourcePacksLines(List<ClientTooltipComponent> lines, String[] packIds) {
+    private static void addResourcePacksLines(List<Component> lines, String[] packIds) {
         Component titleComp = Component.literal(ChatRemasteredConfig.tr("chat-remastered.meta_resourcepacks") + ":")
                 .setStyle(Style.EMPTY.withColor(COLOR_TITLE));
-        lines.add(ClientTooltipComponent.create(titleComp.getVisualOrderText()));
+        lines.add(titleComp);
 
         int shown = Math.min(packIds.length, MAX_RESOURCE_PACKS_LISTED);
         for (int i = 0; i < shown; i++) {
             String id = packIds[i].trim();
             if (id.isEmpty()) continue;
             Component valueComp = Component.literal(id).setStyle(Style.EMPTY.withColor(COLOR_VALUE));
-            lines.add(ClientTooltipComponent.create(valueComp.getVisualOrderText()));
+            lines.add(valueComp);
         }
 
         int remaining = packIds.length - shown;
         if (remaining > 0) {
             String moreText = ChatRemasteredConfig.tr("chat-remastered.meta_resourcepacks_more", remaining);
             Component moreComp = Component.literal(moreText).setStyle(Style.EMPTY.withColor(COLOR_VALUE));
-            lines.add(ClientTooltipComponent.create(moreComp.getVisualOrderText()));
+            lines.add(moreComp);
         }
     }
 }

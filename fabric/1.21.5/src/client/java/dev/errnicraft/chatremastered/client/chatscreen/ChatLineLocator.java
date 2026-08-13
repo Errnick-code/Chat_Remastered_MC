@@ -10,7 +10,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.ChatScreen;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
@@ -294,13 +293,12 @@ public final class ChatLineLocator {
                     }
                     else if (isError) { hint = ChatRemasteredConfig.tr("chat-remastered.hover_error"); colorPrefix = "§e"; }
                     else { hint = ChatRemasteredConfig.tr("chat-remastered.click_to_open"); colorPrefix = ""; }
-                    List<ClientTooltipComponent> lines = new java.util.ArrayList<>();
-                    lines.add(ClientTooltipComponent.create(Component.literal(colorPrefix + hint).getVisualOrderText()));
+                    List<Component> lines = new java.util.ArrayList<>();
+                    lines.add(Component.literal(colorPrefix + hint));
                     if (!isDeleted && !isError) {
                         dev.errnicraft.chatremastered.client.ChatComponentTooltipHelper.appendMetadataLines(lines, otherId);
                     }
-                    graphics.renderTooltip(mc.font, lines, mouseX, mouseY,
-                            (sw, sh, x, y, w, h) -> new org.joml.Vector2i(x, y - h - 4), null);
+                    graphics.renderTooltip(mc.font, lines, java.util.Optional.empty(), mouseX, mouseY);
                     if (!menuOpen) {
                         hoveredMsgLine = findLineIndexForImageId(mc, msg.getImageId());
                     }
@@ -330,13 +328,12 @@ public final class ChatLineLocator {
                 }
                 else if (isError) { hint = ChatRemasteredConfig.tr("chat-remastered.hover_error"); colorPrefix = "§e"; }
                 else { hint = ChatRemasteredConfig.tr("chat-remastered.click_to_open"); colorPrefix = ""; }
-                List<ClientTooltipComponent> lines = new java.util.ArrayList<>();
-                lines.add(ClientTooltipComponent.create(Component.literal(colorPrefix + hint).getVisualOrderText()));
+                List<Component> lines = new java.util.ArrayList<>();
+                lines.add(Component.literal(colorPrefix + hint));
                 if (!isDeleted && !isError) {
                     dev.errnicraft.chatremastered.client.ChatComponentTooltipHelper.appendMetadataLines(lines, msg.getImageId());
                 }
-                graphics.renderTooltip(mc.font, lines, mouseX, mouseY,
-                        (sw, sh, x, y, w, h) -> new org.joml.Vector2i(x, y - h - 4), null);
+                graphics.renderTooltip(mc.font, lines, java.util.Optional.empty(), mouseX, mouseY);
 
                 if (!menuOpen) {
                     hoveredMsgLine = findLineIndexForImageId(mc, msg.getImageId());

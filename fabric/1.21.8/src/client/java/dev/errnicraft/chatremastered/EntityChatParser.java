@@ -36,6 +36,16 @@ public final class EntityChatParser {
             Pattern.DOTALL
     );
 
+    private static final Pattern BLOCK_PATTERN = Pattern.compile(
+            "^<chat_remastered:block:([a-z0-9_.-]+):([a-z0-9_./-]+)(\\{[^>]*})?>\\s?(.*)$",
+            Pattern.DOTALL
+    );
+
+    private static final Pattern LOOK_BLOCK_PATTERN = Pattern.compile(
+            "^<block>\\s?(.*)$",
+            Pattern.DOTALL
+    );
+
     private static final Pattern LOOK_ENTITY_PATTERN = Pattern.compile(
             "^<entity>\\s?(.*)$",
             Pattern.DOTALL
@@ -56,6 +66,12 @@ public final class EntityChatParser {
     }
 
     public record ParsedHandItemCommand(String caption) {
+    }
+
+    public record ParsedBlockCommand(String blockNamespace, String blockPath, String blockState, String caption) {
+    }
+
+    public record ParsedLookBlockCommand(String caption) {
     }
 
     public record ParsedLookEntityCommand(String caption) {
@@ -126,6 +142,33 @@ public final class EntityChatParser {
         }
         String caption = m.group(1) != null ? m.group(1).trim() : "";
         return new ParsedHandItemCommand(caption);
+    }
+
+    public static ParsedBlockCommand parseBlock(String rawInput) {
+        if (rawInput == null) {
+            return null;
+        }
+        Matcher m = BLOCK_PATTERN.matcher(rawInput);
+        if (!m.matches()) {
+            return null;
+        }
+        String blockNamespace = m.group(1);
+        String blockPath = m.group(2);
+        String blockState = m.group(3) != null ? m.group(3) : "";
+        String caption = m.group(4) != null ? m.group(4).trim() : "";
+        return new ParsedBlockCommand(blockNamespace, blockPath, blockState, caption);
+    }
+
+    public static ParsedLookBlockCommand parseLookBlock(String rawInput) {
+        if (rawInput == null) {
+            return null;
+        }
+        Matcher m = LOOK_BLOCK_PATTERN.matcher(rawInput);
+        if (!m.matches()) {
+            return null;
+        }
+        String caption = m.group(1) != null ? m.group(1).trim() : "";
+        return new ParsedLookBlockCommand(caption);
     }
 
     public static ParsedLookEntityCommand parseLookEntity(String rawInput) {

@@ -42,12 +42,20 @@ public final class EntityTagHighlighter {
             "^(<)(chat_remastered)(:)(item)(:)([a-z0-9_.-]*)(:)([a-z0-9_./-]*)(\\{[^>]*})?(>)?"
     );
 
+    private static final Pattern BLOCK_HL_PATTERN = Pattern.compile(
+            "^(<)(chat_remastered)(:)(block)(:)([a-z0-9_.-]*)(:)([a-z0-9_./-]*)(\\{[^>]*})?(>)?"
+    );
+
     private static final Pattern HAND_ITEM_HL_PATTERN = Pattern.compile(
             "^(<)(item)(>)?"
     );
 
     private static final Pattern LOOK_ENTITY_HL_PATTERN = Pattern.compile(
             "^(<)(entity)(>)?"
+    );
+
+    private static final Pattern LOOK_BLOCK_HL_PATTERN = Pattern.compile(
+            "^(<)(block)(>)?"
     );
 
     private static final Pattern SHORT_PLAYER_HL_PATTERN = Pattern.compile(
@@ -58,7 +66,7 @@ public final class EntityTagHighlighter {
             "^(<)([0-9a-fA-F-]{0,36})(>)?"
     );
 
-    private enum TagKind { ENTITY, PLAYER, ITEM, HAND_ITEM, LOOK_ENTITY, SHORT_PLAYER, UUID }
+    private enum TagKind { ENTITY, PLAYER, ITEM, BLOCK, HAND_ITEM, LOOK_ENTITY, LOOK_BLOCK, SHORT_PLAYER, UUID }
 
     private EntityTagHighlighter() {
     }
@@ -67,8 +75,9 @@ public final class EntityTagHighlighter {
         if (fullText == null
                 || !(fullText.startsWith("<chat_remastered:") || fullText.startsWith("<item")
                      || fullText.startsWith("<entity") || fullText.startsWith("<player:")
+                     || fullText.startsWith("<block")
                      || isUuidStart(fullText))) {
-            return null;
+            return FormattedCharSequence.forward(fragment, DEFAULT_STYLE);
         }
 
         FormattedCharSequence wholeLine = highlightWhole(fullText);
@@ -111,6 +120,10 @@ public final class EntityTagHighlighter {
         if (itemM.lookingAt()) {
             return styleFromMatch(itemM, charIndex, TagKind.ITEM);
         }
+        Matcher blockM = BLOCK_HL_PATTERN.matcher(fullText);
+        if (blockM.lookingAt()) {
+            return styleFromMatch(blockM, charIndex, TagKind.BLOCK);
+        }
         Matcher playerM = PLAYER_HL_PATTERN.matcher(fullText);
         if (playerM.lookingAt()) {
             return styleFromMatch(playerM, charIndex, TagKind.PLAYER);
@@ -122,6 +135,10 @@ public final class EntityTagHighlighter {
         Matcher lookEntityM = LOOK_ENTITY_HL_PATTERN.matcher(fullText);
         if (lookEntityM.lookingAt()) {
             return styleFromMatch(lookEntityM, charIndex, TagKind.LOOK_ENTITY);
+        }
+        Matcher lookBlockM = LOOK_BLOCK_HL_PATTERN.matcher(fullText);
+        if (lookBlockM.lookingAt()) {
+            return styleFromMatch(lookBlockM, charIndex, TagKind.LOOK_BLOCK);
         }
         Matcher shortPlayerM = SHORT_PLAYER_HL_PATTERN.matcher(fullText);
         if (shortPlayerM.lookingAt()) {
@@ -159,6 +176,10 @@ public final class EntityTagHighlighter {
         if (im.lookingAt()) {
             return buildFromMatcher(text, im, TagKind.ITEM);
         }
+        Matcher bm = BLOCK_HL_PATTERN.matcher(text);
+        if (bm.lookingAt()) {
+            return buildFromMatcher(text, bm, TagKind.BLOCK);
+        }
         Matcher pm = PLAYER_HL_PATTERN.matcher(text);
         if (pm.lookingAt()) {
             return buildFromMatcher(text, pm, TagKind.PLAYER);
@@ -170,6 +191,10 @@ public final class EntityTagHighlighter {
         Matcher lem = LOOK_ENTITY_HL_PATTERN.matcher(text);
         if (lem.lookingAt()) {
             return buildFromMatcher(text, lem, TagKind.LOOK_ENTITY);
+        }
+        Matcher lbm = LOOK_BLOCK_HL_PATTERN.matcher(text);
+        if (lbm.lookingAt()) {
+            return buildFromMatcher(text, lbm, TagKind.LOOK_BLOCK);
         }
         Matcher spm = SHORT_PLAYER_HL_PATTERN.matcher(text);
         if (spm.lookingAt()) {
@@ -241,12 +266,26 @@ public final class EntityTagHighlighter {
                 case 9 -> NBT_STYLE;
                 default -> PUNCT_STYLE;
             };
+            case BLOCK -> switch (g) {
+                case 1, 3, 5, 7, 10 -> PUNCT_STYLE;
+                case 2 -> ROOT_STYLE;
+                case 4 -> KIND_STYLE;
+                case 6 -> NAMESPACE_STYLE;
+                case 8 -> PATH_STYLE;
+                case 9 -> NBT_STYLE;
+                default -> PUNCT_STYLE;
+            };
             case HAND_ITEM -> switch (g) {
                 case 1, 3 -> PUNCT_STYLE;
                 case 2 -> KIND_STYLE;
                 default -> PUNCT_STYLE;
             };
             case LOOK_ENTITY -> switch (g) {
+                case 1, 3 -> PUNCT_STYLE;
+                case 2 -> KIND_STYLE;
+                default -> PUNCT_STYLE;
+            };
+            case LOOK_BLOCK -> switch (g) {
                 case 1, 3 -> PUNCT_STYLE;
                 case 2 -> KIND_STYLE;
                 default -> PUNCT_STYLE;

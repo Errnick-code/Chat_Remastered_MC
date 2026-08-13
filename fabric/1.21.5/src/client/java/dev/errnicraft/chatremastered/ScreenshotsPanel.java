@@ -388,11 +388,11 @@ public final class ScreenshotsPanel {
             int fitH = Math.max(1, Math.round(e.texH * s));
             int offX = (w - fitW) / 2;
             int offY = (th - fitH) / 2;
-            graphics.pose().pushMatrix();
-            graphics.pose().translate(x + offX, y + offY);
-            graphics.pose().scale(s, s);
+            graphics.pose().pushPose();
+            graphics.pose().translate(x + offX, y + offY, 0f);
+            graphics.pose().scale(s, s, 1f);
             graphics.blit(RenderType::guiTextured, e.textureId, 0, 0, 0f, 0f, e.texW, e.texH, e.texW, e.texH, -1);
-            graphics.pose().popMatrix();
+            graphics.pose().popPose();
         } else if (e.loadFailed) {
             graphics.drawCenteredString(mc.font, "?", x + w / 2, y + th / 2 - mc.font.lineHeight / 2, 0xFF888888);
         } else {

@@ -9,6 +9,7 @@ import dev.errnicraft.chatremastered.network.ModProtocol;
 import dev.errnicraft.chatremastered.network.packet.ClientHelloPacket;
 import dev.errnicraft.chatremastered.network.packet.EntityChatPacket;
 import dev.errnicraft.chatremastered.network.packet.EntityMobChatPacket;
+import dev.errnicraft.chatremastered.network.packet.BlockChatPacket;
 import dev.errnicraft.chatremastered.network.packet.HandshakeErrorPacket;
 import dev.errnicraft.chatremastered.network.packet.ImageChatPacket;
 import dev.errnicraft.chatremastered.network.packet.ImageDeletedPacket;
@@ -322,6 +323,11 @@ public final class NetworkPacketHandlers {
         ClientPlayNetworking.registerGlobalReceiver(ItemChatPacket.TYPE, (payload, context) ->
                 context.client().execute(() -> EntityChatRenderer.addItemToChat(context.client(), payload.sender(),
                         payload.senderComponent(), payload.itemNamespace(), payload.itemPath(), payload.itemNbt(),
+                        payload.caption())));
+
+        ClientPlayNetworking.registerGlobalReceiver(BlockChatPacket.TYPE, (payload, context) ->
+                context.client().execute(() -> EntityChatRenderer.addBlockToChat(context.client(), payload.sender(),
+                        payload.senderComponent(), payload.blockNamespace(), payload.blockPath(), payload.blockState(),
                         payload.caption())));
     }
 }

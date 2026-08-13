@@ -1,6 +1,7 @@
 package dev.errnicraft.chatremastered.client.chatscreen;
 
 import net.minecraft.client.renderer.RenderType;
+import com.mojang.math.Axis;
 
 import dev.errnicraft.chatremastered.PendingCardAnimator;
 import dev.errnicraft.chatremastered.PendingImageState;
@@ -37,12 +38,12 @@ public final class PendingCardRenderer {
             float scale = Math.max(0.02f, spawn.scale());
             int cx = previewLeft + dispW / 2;
             int cy = previewBottom - dispH / 2;
-            graphics.pose().pushMatrix();
-            graphics.pose().translate(cx, cy);
-            graphics.pose().scale(scale, scale);
-            graphics.pose().translate(-dispW / 2f, -dispH / 2f);
+            graphics.pose().pushPose();
+            graphics.pose().translate(cx, cy, 0f);
+            graphics.pose().scale(scale, scale, 1f);
+            graphics.pose().translate(-dispW / 2f, -dispH / 2f, 0f);
             renderPendingCardContent(graphics, mc, mouseX, mouseY, pending, 0, 0, dispH, dispW, dispH, 0xFFFFFFFF);
-            graphics.pose().popMatrix();
+            graphics.pose().popPose();
             return dispW;
         }
 
@@ -115,11 +116,11 @@ public final class PendingCardRenderer {
                 int iconPxH = Math.round(mc.font.lineHeight * iconScale);
                 int iconX = previewLeft + (dispW - iconPxW) / 2;
                 int iconY = previewTop + (iconAreaH - iconPxH) / 2;
-                graphics.pose().pushMatrix();
-                graphics.pose().translate(iconX, iconY);
-                graphics.pose().scale(iconScale, iconScale);
+                graphics.pose().pushPose();
+                graphics.pose().translate(iconX, iconY, 0f);
+                graphics.pose().scale(iconScale, iconScale, 1f);
                 graphics.drawString(mc.font, icon, 0, 0, iconColor, false);
-                graphics.pose().popMatrix();
+                graphics.pose().popPose();
             }
         } else {
             int texW = pending.getTextureWidth();
@@ -131,11 +132,11 @@ public final class PendingCardRenderer {
             int fitH = Math.max(1, Math.round(texH * s));
             int offsetX = (dispW - fitW) / 2;
             int offsetY = (dispH - fitH) / 2;
-            graphics.pose().pushMatrix();
-            graphics.pose().translate(previewLeft + offsetX, previewTop + offsetY);
-            graphics.pose().scale(s, s);
+            graphics.pose().pushPose();
+            graphics.pose().translate(previewLeft + offsetX, previewTop + offsetY, 0f);
+            graphics.pose().scale(s, s, 1f);
             graphics.blit(RenderType::guiTextured, tex, 0, 0, 0f, 0f, texW, texH, texW, texH, tintAlpha(0xFFFFFFFF, a));
-            graphics.pose().popMatrix();
+            graphics.pose().popPose();
         }
 
         int closeSize = 14;
@@ -166,12 +167,12 @@ public final class PendingCardRenderer {
         int centerY = top + r.cardH / 2;
         float angleRad = (float) Math.toRadians(r.currentRotation());
 
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(centerX, centerY);
-        graphics.pose().rotate(angleRad);
-        graphics.pose().translate(-r.cardW / 2f, -r.cardH / 2f);
+        graphics.pose().pushPose();
+        graphics.pose().translate(centerX, centerY, 0f);
+        graphics.pose().mulPose(Axis.ZP.rotation(angleRad));
+        graphics.pose().translate(-r.cardW / 2f, -r.cardH / 2f, 0f);
         renderRemovingCardContent(graphics, mc, r, 0, 0, r.cardW, r.cardH, a);
-        graphics.pose().popMatrix();
+        graphics.pose().popPose();
     }
 
     public static void renderShatterCard(GuiGraphics graphics, Minecraft mc, PendingCardAnimator.RemoveState r) {
@@ -197,12 +198,12 @@ public final class PendingCardRenderer {
             int centerX = r.cardX + Math.round(pivotX) + offX;
             int centerY = r.cardTop + Math.round(pivotY) + offY;
 
-            graphics.pose().pushMatrix();
-            graphics.pose().translate(centerX, centerY);
-            graphics.pose().rotate(angleRad);
-            graphics.pose().translate(-(pivotX - s.minX), -(pivotY - s.minY));
+            graphics.pose().pushPose();
+            graphics.pose().translate(centerX, centerY, 0f);
+            graphics.pose().mulPose(Axis.ZP.rotation(angleRad));
+            graphics.pose().translate(-(pivotX - s.minX), -(pivotY - s.minY), 0f);
             renderShardTexture(graphics, r, s, a);
-            graphics.pose().popMatrix();
+            graphics.pose().popPose();
         }
     }
 
@@ -258,11 +259,11 @@ public final class PendingCardRenderer {
         int destW = runLen;
         int destH = 1;
 
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(destX, destY);
-        graphics.pose().scale((float) destW / srcW, (float) destH / srcH);
+        graphics.pose().pushPose();
+        graphics.pose().translate(destX, destY, 0f);
+        graphics.pose().scale((float) destW / srcW, (float) destH / srcH, 1f);
         graphics.blit(RenderType::guiTextured, r.tex, 0, 0, srcU0, srcV0, (int) srcW, (int) srcH, texW, texH, tint);
-        graphics.pose().popMatrix();
+        graphics.pose().popPose();
     }
 
     public static void renderRemovingCardContent(GuiGraphics graphics, Minecraft mc, PendingCardAnimator.RemoveState r,
@@ -280,11 +281,11 @@ public final class PendingCardRenderer {
             int fitH = Math.max(1, Math.round(texH * s));
             int offsetX = (dispW - fitW) / 2;
             int offsetY = (dispH - fitH) / 2;
-            graphics.pose().pushMatrix();
-            graphics.pose().translate(previewLeft + offsetX, previewTop + offsetY);
-            graphics.pose().scale(s, s);
+            graphics.pose().pushPose();
+            graphics.pose().translate(previewLeft + offsetX, previewTop + offsetY, 0f);
+            graphics.pose().scale(s, s, 1f);
             graphics.blit(RenderType::guiTextured, r.tex, 0, 0, 0f, 0f, texW, texH, texW, texH, tintAlpha(0xFFFFFFFF, alphaByte));
-            graphics.pose().popMatrix();
+            graphics.pose().popPose();
         } else {
             graphics.fill(previewLeft, previewTop, previewLeft + dispW, previewBottom, tintAlpha(0xFF2A2A2A, alphaByte));
 
@@ -315,11 +316,11 @@ public final class PendingCardRenderer {
                 int iconPxH = Math.round(mc.font.lineHeight * iconScale);
                 int iconX = previewLeft + (dispW - iconPxW) / 2;
                 int iconY = previewTop + (iconAreaH - iconPxH) / 2;
-                graphics.pose().pushMatrix();
-                graphics.pose().translate(iconX, iconY);
-                graphics.pose().scale(iconScale, iconScale);
+                graphics.pose().pushPose();
+                graphics.pose().translate(iconX, iconY, 0f);
+                graphics.pose().scale(iconScale, iconScale, 1f);
                 graphics.drawString(mc.font, icon, 0, 0, iconColor, false);
-                graphics.pose().popMatrix();
+                graphics.pose().popPose();
             }
         }
 

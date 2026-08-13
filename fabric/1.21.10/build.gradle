@@ -24,6 +24,19 @@ loom {
     }
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir file('../shared/src/main/resources')
+        }
+    }
+    client {
+        resources {
+            srcDir file('../shared/src/client/resources')
+        }
+    }
+}
+
 repositories {
     maven { url "https://maven.shedaniel.me/" }
 }

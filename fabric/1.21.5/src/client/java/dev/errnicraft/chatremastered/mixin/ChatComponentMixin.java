@@ -5,6 +5,7 @@ import dev.errnicraft.chatremastered.ChatRemasteredClient;
 import dev.errnicraft.chatremastered.ChatRemasteredConfig;
 import dev.errnicraft.chatremastered.ImageCache;
 import dev.errnicraft.chatremastered.client.ResolvedSkinRemotePlayer;
+import dev.errnicraft.chatremastered.client.ChatOverlayRenderer;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,14 +24,45 @@ import net.minecraft.util.FormattedCharSequence;
 import java.util.List;
 
 @Mixin(ChatComponent.class)
-public class ChatComponentMixin {
+public class ChatComponentMixin implements ChatOverlayRenderer {
 
     private static final int IMG_LEFT_MARGIN = 2;
     private static final int IMG_VERT_PAD = 2;
     private static final int IMG_TOP_GAP  = 2;
 
-    @Inject(method = "render", at = @At("TAIL"))
-    private void chatremastered$renderImages(
+    // Captured each frame from the real ChatComponent.render() call so the
+    // overlay draws issued afterwards from ChatScreenMixin (strictly after
+    // ChatComponent.render() has returned, guaranteeing our elements paint
+    // on top) can be fed the same tick/mouse/isChatting values vanilla used.
+    // Mixin requires all new fields on a mixin class to be private, so these
+    // are exposed to ChatScreenMixin via the getter methods on
+    // ChatOverlayRenderer below rather than being read directly.
+    private static int chatremastered$lastTicks;
+    private static int chatremastered$lastMouseX;
+    private static int chatremastered$lastMouseY;
+    private static boolean chatremastered$lastIsChatting;
+
+    @Inject(method = "render", at = @At("HEAD"))
+    private void chatremastered$captureRenderArgs(
+            GuiGraphics guiGraphics, int ticks, int mouseX, int mouseY,
+            boolean isChatting, CallbackInfo ci
+    ) {
+        chatremastered$lastTicks = ticks;
+        chatremastered$lastMouseX = mouseX;
+        chatremastered$lastMouseY = mouseY;
+        chatremastered$lastIsChatting = isChatting;
+    }
+
+    @Override
+    public int chatremastered$getLastTicks() { return chatremastered$lastTicks; }
+    @Override
+    public int chatremastered$getLastMouseX() { return chatremastered$lastMouseX; }
+    @Override
+    public int chatremastered$getLastMouseY() { return chatremastered$lastMouseY; }
+    @Override
+    public boolean chatremastered$getLastIsChatting() { return chatremastered$lastIsChatting; }
+
+    public void chatremastered$renderImages(
             GuiGraphics guiGraphics, int ticks, int mouseX, int mouseY,
             boolean isChatting,
             CallbackInfo ci
@@ -38,6 +70,9 @@ public class ChatComponentMixin {
         Minecraft mc = Minecraft.getInstance();
         List<ChatRemasteredStore.ImageMessage> msgs = ChatRemasteredStore.getMessageList();
         if (msgs.isEmpty()) return;
+
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0f, 0f, 200f);
 
         float scale = mc.options.chatScale().get().floatValue();
         if (scale < 0.01f) scale = 1f;
@@ -156,15 +191,15 @@ public class ChatComponentMixin {
                     (int)(4 * scale) + (int)(chatWidthPx * scale), chatBottomGui
             );
 
-            guiGraphics.pose().pushMatrix();
-            guiGraphics.pose().scale(scale, scale);
-            guiGraphics.pose().translate(4.0f, 0.0f);
+            guiGraphics.pose().pushPose();
+            guiGraphics.pose().scale(scale, scale, 1f);
+            guiGraphics.pose().translate(4.0f, 0.0f, 0f);
 
             boolean groupRowMode = msg.isGroup() && ChatRemasteredConfig.getGroupPhotosRowMode();
 
             if (groupRowMode) {
 
-                guiGraphics.pose().popMatrix();
+                guiGraphics.pose().popPose();
                 guiGraphics.disableScissor();
 
                 int guiX0 = (int)((IMG_LEFT_MARGIN + 4) * scale);
@@ -233,11 +268,11 @@ public class ChatComponentMixin {
                         int iconX = cardCenterX - iconPxW / 2;
                         int iconY = cardCenterY - iconPxH / 2;
                         if (iconY < clampedImgBottom && iconY + iconPxH > clampedImgTop) {
-                            guiGraphics.pose().pushMatrix();
-                            guiGraphics.pose().translate(iconX, iconY);
-                            guiGraphics.pose().scale(iconScale, iconScale);
+                            guiGraphics.pose().pushPose();
+                            guiGraphics.pose().translate(iconX, iconY, 0f);
+                            guiGraphics.pose().scale(iconScale, iconScale, 1f);
                             guiGraphics.drawString(mc.font, icon, 0, 0, iconTint, false);
-                            guiGraphics.pose().popMatrix();
+                            guiGraphics.pose().popPose();
                         }
                     } else {
                         String icon = isDeleted ? "✗" : "🖼";
@@ -254,11 +289,11 @@ public class ChatComponentMixin {
                         int iconY = cardCenterY - iconPxH / 2;
 
                         if (iconY < clampedImgBottom && iconY + iconPxH > clampedImgTop) {
-                            guiGraphics.pose().pushMatrix();
-                            guiGraphics.pose().translate(iconX, iconY);
-                            guiGraphics.pose().scale(iconScale, iconScale);
+                            guiGraphics.pose().pushPose();
+                            guiGraphics.pose().translate(iconX, iconY, 0f);
+                            guiGraphics.pose().scale(iconScale, iconScale, 1f);
                             guiGraphics.drawString(mc.font, icon, 0, 0, iconTint, false);
-                            guiGraphics.pose().popMatrix();
+                            guiGraphics.pose().popPose();
                         }
                     }
                 }
@@ -285,9 +320,9 @@ public class ChatComponentMixin {
                 vOffsetOrig = Math.max(0f, vOffsetOrig);
                 int drawHOrig = Math.round(drawH / scaleY);
 
-                guiGraphics.pose().pushMatrix();
-                guiGraphics.pose().translate(IMG_LEFT_MARGIN, clampedImgTop);
-                guiGraphics.pose().scale(scaleX, scaleY);
+                guiGraphics.pose().pushPose();
+                guiGraphics.pose().translate(IMG_LEFT_MARGIN, clampedImgTop, 0f);
+                guiGraphics.pose().scale(scaleX, scaleY, 1f);
 
                 guiGraphics.blit(
                         RenderType::guiTextured,
@@ -299,7 +334,7 @@ public class ChatComponentMixin {
                         blitColor
                 );
 
-                guiGraphics.pose().popMatrix();
+                guiGraphics.pose().popPose();
 
                 int guiX0Hover = (int)((IMG_LEFT_MARGIN + 4) * scale);
                 int guiX1Hover = (int)((IMG_LEFT_MARGIN + 4 + dispW) * scale);
@@ -376,7 +411,7 @@ public class ChatComponentMixin {
                 }
             }
 
-            guiGraphics.pose().popMatrix();
+            guiGraphics.pose().popPose();
             guiGraphics.disableScissor();
 
             int guiX0 = (int)((IMG_LEFT_MARGIN + 4) * scale);
@@ -387,6 +422,9 @@ public class ChatComponentMixin {
             msg.clearRowCardBounds();
 
         }
+
+        guiGraphics.pose().popPose();
+
     }
 
     private static final int GROUP_ROW_GAP = 4;
@@ -481,11 +519,11 @@ public class ChatComponentMixin {
                     int iconPxH = Math.round(mc.font.lineHeight * iconScale);
                     int iconX = cardX + (cardW - iconPxW) / 2;
                     int iconY = guiY0 + (cardH - iconPxH) / 2;
-                    guiGraphics.pose().pushMatrix();
-                    guiGraphics.pose().translate(iconX, iconY);
-                    guiGraphics.pose().scale(iconScale, iconScale);
+                    guiGraphics.pose().pushPose();
+                    guiGraphics.pose().translate(iconX, iconY, 0f);
+                    guiGraphics.pose().scale(iconScale, iconScale, 1f);
                     guiGraphics.drawString(mc.font, icon, 0, 0, iconTint, false);
-                    guiGraphics.pose().popMatrix();
+                    guiGraphics.pose().popPose();
                 }
 
                 if (!isDeleted && !isError) {
@@ -519,9 +557,9 @@ public class ChatComponentMixin {
                             origH = frame.getHeight();
                         }
                     }
-                    guiGraphics.pose().pushMatrix();
-                    guiGraphics.pose().translate(cardX, guiY0);
-                    guiGraphics.pose().scale((float) cardW / origW, (float) cardH / origH);
+                    guiGraphics.pose().pushPose();
+                    guiGraphics.pose().translate(cardX, guiY0, 0f);
+                    guiGraphics.pose().scale((float) cardW / origW, (float) cardH / origH, 1f);
                     guiGraphics.blit(
                             RenderType::guiTextured,
                             tex,
@@ -531,7 +569,7 @@ public class ChatComponentMixin {
                             origW, origH,
                             (alphaInt | 0x00FFFFFF)
                     );
-                    guiGraphics.pose().popMatrix();
+                    guiGraphics.pose().popPose();
                 }
 
                 boolean isOwn = mc.player != null && mc.player.getGameProfile().getName().equals(msg.getSender());
@@ -572,12 +610,14 @@ public class ChatComponentMixin {
         guiGraphics.disableScissor();
     }
 
-    @Inject(method = "render", at = @At("TAIL"))
-    private void chatremastered$renderReplies(
+    public void chatremastered$renderReplies(
             GuiGraphics guiGraphics, int ticks, int mouseX, int mouseY,
             boolean isChatting,
             CallbackInfo ci2) {
         Minecraft mc = Minecraft.getInstance();
+
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0f, 0f, 200f);
 
         ChatComponentAccessor accessor = (ChatComponentAccessor) this;
         List<GuiMessage.Line> trimmed = accessor.getTrimmedMessages();
@@ -713,8 +753,8 @@ public class ChatComponentMixin {
                 }
             }
 
-            guiGraphics.pose().pushMatrix();
-            guiGraphics.pose().scale(scale, scale);
+            guiGraphics.pose().pushPose();
+            guiGraphics.pose().scale(scale, scale, 1f);
 
             int textX = 4 + 4;
             int textY = barTop + (REPLY_BAR_H - mc.font.lineHeight) / 2 + 1;
@@ -737,9 +777,9 @@ public class ChatComponentMixin {
                     int drawW = Math.round(texW * s);
                     int drawH = Math.round(texH * s);
                     int photoY = barTop + (REPLY_BAR_H - drawH) / 2;
-                    guiGraphics.pose().pushMatrix();
-                    guiGraphics.pose().translate(curX, photoY);
-                    guiGraphics.pose().scale(s, s);
+                    guiGraphics.pose().pushPose();
+                    guiGraphics.pose().translate(curX, photoY, 0f);
+                    guiGraphics.pose().scale(s, s, 1f);
                     guiGraphics.blit(
                             net.minecraft.client.renderer.RenderType::guiTextured,
                             thumbTex,
@@ -749,7 +789,7 @@ public class ChatComponentMixin {
                             texW, texH,
                             textAlpha | 0xFFFFFF
                     );
-                    guiGraphics.pose().popMatrix();
+                    guiGraphics.pose().popPose();
                     curX += drawW + 3;
                 }
 
@@ -794,8 +834,10 @@ public class ChatComponentMixin {
                 guiGraphics.drawString(mc.font, labelComp2, curX2, textY, textAlpha | 0xAAAAAA, false);
             }
 
-            guiGraphics.pose().popMatrix();
+            guiGraphics.pose().popPose();
         }
+
+        guiGraphics.pose().popPose();
     }
 
     @ModifyReturnValue(method = "getLinesPerPage", at = @At("RETURN"))
@@ -899,8 +941,7 @@ public class ChatComponentMixin {
     private static final float ENTITY_ROTATE_SPEED_DEG_PER_TICK = 1.2f;
     private static final float ENTITY_ROTATE_SPEED_DEG_PER_SEC = ENTITY_ROTATE_SPEED_DEG_PER_TICK * 20.0f;
 
-    @Inject(method = "render", at = @At("TAIL"))
-    private void chatremastered$renderEntities(
+    public void chatremastered$renderEntities(
             GuiGraphics guiGraphics, int ticks, int mouseX, int mouseY,
             boolean isChatting,
             CallbackInfo ci3
@@ -909,6 +950,9 @@ public class ChatComponentMixin {
         List<ChatRemasteredStore.EntityMessage> entityMsgs = ChatRemasteredStore.getEntityMessageList();
         if (entityMsgs.isEmpty()) return;
         if (mc.level == null) return;
+
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0f, 0f, 200f);
 
         float scale = mc.options.chatScale().get().floatValue();
         if (scale < 0.01f) scale = 1f;
@@ -1041,11 +1085,14 @@ public class ChatComponentMixin {
 
             msg.setScreenBounds(entGuiX0, entGuiY0, entGuiX1, entGuiY1);
         }
+
+        guiGraphics.pose().popPose();
     }
 
     private net.minecraft.world.entity.player.Player chatremastered$resolvePlayerEntity(
             Minecraft mc, ChatRemasteredStore.EntityMessage msg) {
         String targetName = msg.getTargetPlayerName();
+        if (targetName == null) return null;
 
         com.mojang.authlib.GameProfile onlineProfile = null;
         if (mc.getConnection() != null) {
@@ -1130,15 +1177,7 @@ public class ChatComponentMixin {
         if (nbt != null && nbt.length() >= 2) {
             try {
                 net.minecraft.nbt.CompoundTag tag = net.minecraft.nbt.TagParser.parseCompoundFully(nbt);
-                net.minecraft.util.ProblemReporter.Collector problems = new net.minecraft.util.ProblemReporter.Collector();
-                net.minecraft.world.level.storage.ValueInput input = net.minecraft.world.level.storage.TagValueInput.create(
-                        problems, mc.level.registryAccess(), tag);
-                created.load(input);
-                if (!problems.isEmpty()) {
-                    mc.gui.getChat().addMessage(net.minecraft.network.chat.Component.literal(
-                            "§c[Chat Remastered] NBT для " + msg.entityNamespace + ":" + msg.entityPath
-                                    + " применён частично: " + problems.getReport()));
-                }
+                created.load(tag);
             } catch (Exception e) {
                 mc.gui.getChat().addMessage(net.minecraft.network.chat.Component.literal(
                         "§c[Chat Remastered] NBT для " + msg.entityNamespace + ":" + msg.entityPath
@@ -1164,25 +1203,31 @@ public class ChatComponentMixin {
                 .rotateY((float) Math.toRadians(angleDeg));
         rotation.mul(yRotation);
 
-        net.minecraft.client.renderer.entity.EntityRenderDispatcher dispatcher =
-                Minecraft.getInstance().getEntityRenderDispatcher();
-        net.minecraft.client.renderer.entity.EntityRenderer<? super net.minecraft.world.entity.LivingEntity, ?> renderer =
-                dispatcher.getRenderer(entity);
-        net.minecraft.client.renderer.entity.state.EntityRenderState renderState =
-                renderer.createRenderState(entity, 1.0f);
+        float centerX = (x0 + x1) / 2f;
+        float centerY = (y0 + y1) / 2f;
 
-        if (renderState instanceof net.minecraft.client.renderer.entity.state.LivingEntityRenderState livingState) {
-            livingState.bodyRot = 180.0f;
-            livingState.yRot = 0.0f;
-            livingState.xRot = 0.0f;
-            livingState.boundingBoxWidth = livingState.boundingBoxWidth / livingState.scale;
-            livingState.boundingBoxHeight = livingState.boundingBoxHeight / livingState.scale;
-            livingState.scale = 1.0f;
-        }
+        float prevBodyRot = entity.yBodyRot;
+        float prevYRot = entity.getYRot();
+        float prevXRot = entity.getXRot();
+        float prevYHeadRotO = entity.yHeadRotO;
+        float prevYHeadRot = entity.yHeadRot;
 
-        org.joml.Vector3f translation = new org.joml.Vector3f(
-                offWorldX, renderState.boundingBoxHeight / 2.0f + 0.0625f + offWorldY, 0.0f);
-        guiGraphics.submitEntityRenderState(renderState, size, translation, rotation, yRotation, x0, y0, x1, y1);
+        entity.yBodyRot = 180.0f;
+        entity.setYRot(180.0f);
+        entity.setXRot(0.0f);
+        entity.yHeadRotO = entity.getYRot();
+        entity.yHeadRot = entity.getYRot();
+
+        org.joml.Vector3f translation = new org.joml.Vector3f(offWorldX, offWorldY, 0.0f);
+
+        net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventory(
+                guiGraphics, centerX, centerY, size, translation, rotation, yRotation, entity);
+
+        entity.yBodyRot = prevBodyRot;
+        entity.setYRot(prevYRot);
+        entity.setXRot(prevXRot);
+        entity.yHeadRotO = prevYHeadRotO;
+        entity.yHeadRot = prevYHeadRot;
     }
 
     private static final int ITEM_LEFT_MARGIN = 10;
@@ -1191,8 +1236,7 @@ public class ChatComponentMixin {
 
     private static final float ITEM_ROTATE_SPEED_DEG_PER_SEC = ENTITY_ROTATE_SPEED_DEG_PER_SEC;
 
-    @Inject(method = "render", at = @At("TAIL"))
-    private void chatremastered$renderItems(
+    public void chatremastered$renderItems(
             GuiGraphics guiGraphics, int ticks, int mouseX, int mouseY,
             boolean isChatting,
             CallbackInfo ci4
@@ -1201,6 +1245,9 @@ public class ChatComponentMixin {
         List<ChatRemasteredStore.EntityMessage> entityMsgs = ChatRemasteredStore.getEntityMessageList();
         if (entityMsgs.isEmpty()) return;
         if (mc.level == null) return;
+
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0f, 0f, 200f);
 
         float scale = mc.options.chatScale().get().floatValue();
         if (scale < 0.01f) scale = 1f;
@@ -1316,9 +1363,14 @@ public class ChatComponentMixin {
 
             if (renderStack != null && !renderStack.isEmpty()
                     && mouseX >= itemGuiX0 && mouseX < itemGuiX1 && mouseY >= itemGuiY0 && mouseY < itemGuiY1) {
-                guiGraphics.setTooltipForNextFrame(mc.font, renderStack, mouseX, mouseY);
+                java.util.List<net.minecraft.network.chat.Component> tooltipLines =
+                        renderStack.getTooltipLines(net.minecraft.world.item.Item.TooltipContext.of(mc.level), mc.player,
+                                net.minecraft.world.item.TooltipFlag.Default.NORMAL);
+                guiGraphics.renderTooltip(mc.font, tooltipLines, java.util.Optional.empty(), mouseX, mouseY);
             }
         }
+
+        guiGraphics.pose().popPose();
     }
 
     private net.minecraft.world.item.ItemStack chatremastered$resolveItemStack(
@@ -1360,11 +1412,6 @@ public class ChatComponentMixin {
             Minecraft mc, GuiGraphics guiGraphics, int x0, int y0, int x1, int y1, int size,
             net.minecraft.world.item.ItemStack stack, float angleDeg,
             ChatRemasteredStore.EntityMessage msg) {
-        org.joml.Quaternionf rotation = new org.joml.Quaternionf().rotateZ((float) Math.PI);
-        org.joml.Quaternionf yRotation = new org.joml.Quaternionf()
-                .rotateY((float) Math.toRadians(angleDeg));
-        rotation.mul(yRotation);
-
         String cacheKey = "item:" + msg.itemNamespace + ":" + msg.itemPath + ":" + msg.itemNbt;
         net.minecraft.world.entity.item.ItemEntity itemEntity;
         if (msg.cachedPlayerEntity instanceof net.minecraft.world.entity.item.ItemEntity cached
@@ -1377,18 +1424,24 @@ public class ChatComponentMixin {
             msg.cachedForUuid = cacheKey;
         }
 
-        net.minecraft.client.renderer.entity.EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
-        net.minecraft.client.renderer.entity.EntityRenderer<? super net.minecraft.world.entity.item.ItemEntity, ?> renderer =
-                dispatcher.getRenderer(itemEntity);
-        net.minecraft.client.renderer.entity.state.EntityRenderState renderState =
-                renderer.createRenderState(itemEntity, 0.0f);
-        renderState.ageInTicks = 0.0f;
-        if (renderState instanceof net.minecraft.client.renderer.entity.state.ItemEntityRenderState itemState) {
-            itemState.bobOffset = 0.0f;
-        }
+        float centerX = (x0 + x1) / 2f;
+        float centerY = (y0 + y1) / 2f;
 
-        org.joml.Vector3f translation = new org.joml.Vector3f(0.0f, 0.4f, 0.0f);
-        guiGraphics.submitEntityRenderState(renderState, size, translation, rotation, yRotation, x0, y0, x1, y1);
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(centerX, centerY, 100.0f);
+        guiGraphics.pose().scale(size, size, size);
+        guiGraphics.pose().mulPose(new org.joml.Quaternionf().rotateZ((float) Math.PI));
+        guiGraphics.pose().mulPose(new org.joml.Quaternionf().rotateY((float) Math.toRadians(angleDeg)));
+        guiGraphics.pose().translate(0.0, -0.4, 0.0);
+
+        com.mojang.blaze3d.vertex.PoseStack capturedPose = guiGraphics.pose();
+        net.minecraft.client.renderer.entity.EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
+        guiGraphics.drawSpecial(bufferSource -> dispatcher.render(
+                itemEntity, 0.0, 0.0, 0.0, 0.0f,
+                capturedPose, bufferSource, 0xF000F0));
+
+        guiGraphics.pose().popPose();
     }
+
 
 }

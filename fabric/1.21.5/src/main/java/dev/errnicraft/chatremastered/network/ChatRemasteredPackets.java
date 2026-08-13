@@ -1,6 +1,7 @@
 package dev.errnicraft.chatremastered.network;
 
 import dev.errnicraft.chatremastered.network.packet.AdminDeleteImagePacket;
+import dev.errnicraft.chatremastered.network.packet.BlockChatPacket;
 import dev.errnicraft.chatremastered.network.packet.ClientHelloPacket;
 import dev.errnicraft.chatremastered.network.packet.DeleteImagePacket;
 import dev.errnicraft.chatremastered.network.packet.EntityByUuidChatPacket;
@@ -28,6 +29,7 @@ public final class ChatRemasteredPackets {
         EntityMobChatPacket.register();
         EntityByUuidChatPacket.register();
         ItemChatPacket.register();
+        BlockChatPacket.register();
         ServerHelloPacket.register();
         ClientHelloPacket.register();
         ServerConfigPacket.register();

@@ -96,9 +96,9 @@ public final class ReplyBarRenderer {
                 int drawW = Math.round(srcW * scale);
                 int drawH = Math.round(srcH * scale);
                 int photoY = barY + (barH - drawH) / 2;
-                graphics.pose().pushMatrix();
-                graphics.pose().translate(contentX, photoY);
-                graphics.pose().scale(scale, scale);
+                graphics.pose().pushPose();
+                graphics.pose().translate(contentX, photoY, 0f);
+                graphics.pose().scale(scale, scale, 1f);
                 graphics.blit(
                         RenderType::guiTextured,
                         tex,
@@ -108,7 +108,7 @@ public final class ReplyBarRenderer {
                         srcW, srcH,
                         -1
                 );
-                graphics.pose().popMatrix();
+                graphics.pose().popPose();
                 contentX += drawW + 3;
                 maxW = closeX - contentX - 4;
             }

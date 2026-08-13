@@ -68,7 +68,7 @@ public final class EntityTagHighlighter {
                 || !(fullText.startsWith("<chat_remastered:") || fullText.startsWith("<item")
                      || fullText.startsWith("<entity") || fullText.startsWith("<player:")
                      || isUuidStart(fullText))) {
-            return null;
+            return FormattedCharSequence.forward(fragment, DEFAULT_STYLE);
         }
 
         FormattedCharSequence wholeLine = highlightWhole(fullText);

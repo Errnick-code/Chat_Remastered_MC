@@ -1,0 +1,83 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+    id 'maven-publish'
+}
+
+def loaderTag = 'fabric'
+def mcVersion = project.minecraft_version
+
+version = "${rootProject.mod_version}+${mcVersion}"
+group = rootProject.maven_group
+
+base {
+    archivesName = "${rootProject.archives_base_name}-${loaderTag}"
+}
+
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        "chat-remastered" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir file('../shared/src/main/resources')
+        }
+    }
+    client {
+        resources {
+            srcDir file('../shared/src/client/resources')
+        }
+    }
+}
+
+repositories {
+    maven { url "https://maven.shedaniel.me/" }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    implementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_version}") {
+        exclude(group: "net.fabricmc.fabric-api")
+    }
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "protocol_version", rootProject.protocol_version
+    filesMatching("fabric.mod.json") {
+        expand "version": inputs.properties.version,
+                "protocol_version": inputs.properties.protocol_version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 25
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+
+    withSourcesJar()
+
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+    archiveVersion = "${rootProject.mod_version}+${mcVersion}"
+
+    from("${rootDir}/LICENSE") {
+        rename { "${it}_${project.base.archivesName}" }
+    }
+}

@@ -934,6 +934,7 @@ public class ChatComponentMixin {
         for (ChatRemasteredStore.EntityMessage msg : entityMsgs) {
             if (msg.getDismissed()) continue;
             if (msg.isItemMode()) continue;
+            if (msg.isBlockMode()) continue;
 
             int nickLineIndex = -1;
             for (int i = trimmed.size() - 1; i >= 0; i--) {
@@ -1049,6 +1050,7 @@ public class ChatComponentMixin {
     private net.minecraft.world.entity.player.Player chatremastered$resolvePlayerEntity(
             Minecraft mc, ChatRemasteredStore.EntityMessage msg) {
         String targetName = msg.getTargetPlayerName();
+        if (targetName == null) return null;
 
         com.mojang.authlib.GameProfile onlineProfile = null;
         if (mc.getConnection() != null) {
@@ -1397,6 +1399,225 @@ public class ChatComponentMixin {
         }
 
         org.joml.Vector3f translation = new org.joml.Vector3f(0.0f, 0.4f, 0.0f);
+        guiGraphics.submitEntityRenderState(renderState, size, translation, rotation, yRotation, x0, y0, x1, y1);
+    }
+
+    private static final int BLOCK_LEFT_MARGIN = 10;
+    private static final int BLOCK_VERT_PAD = 0;
+    private static final int BLOCK_TOP_GAP = 0;
+
+    @Inject(method = "render", at = @At("TAIL"))
+    private void chatremastered$renderBlocks(
+            GuiGraphics guiGraphics, Font font, int ticks, int mouseX, int mouseY,
+            boolean isChatting, boolean changeCursorOnInsertions,
+            CallbackInfo ci5
+    ) {
+        Minecraft mc = Minecraft.getInstance();
+        List<ChatRemasteredStore.EntityMessage> entityMsgs = ChatRemasteredStore.getEntityMessageList();
+        if (entityMsgs.isEmpty()) return;
+        if (mc.level == null) return;
+
+        float scale = mc.options.chatScale().get().floatValue();
+        if (scale < 0.01f) scale = 1f;
+        double chatLineSpacing = mc.options.chatLineSpacing().get();
+        int entryHeight = (int) (9.0 * (chatLineSpacing + 1.0));
+        int chatBottom = Mth.floor((mc.getWindow().getGuiScaledHeight() - 40) / scale);
+
+        ChatComponentAccessor accessor = (ChatComponentAccessor) this;
+        List<GuiMessage.Line> trimmed = accessor.getTrimmedMessages();
+        int scrollPos = accessor.getChatScrollbarPos();
+        int linesPerPage = ((ChatComponent)(Object) this).getLinesPerPage();
+
+        int chatBottomGui = mc.getWindow().getGuiScaledHeight() - 40;
+        final int chatTopScaled = chatBottom - linesPerPage * entryHeight;
+
+        int dispHDefault = dev.errnicraft.chatremastered.client.EntityChatRenderer.BLOCK_LINES * entryHeight;
+
+        for (ChatRemasteredStore.EntityMessage msg : entityMsgs) {
+            if (msg.getDismissed()) continue;
+            if (!msg.isBlockMode()) continue;
+
+            int nickLineIndex = -1;
+            for (int i = trimmed.size() - 1; i >= 0; i--) {
+                GuiMessage.Line line = trimmed.get(i);
+                if (line.addedTime() == msg.getAddedTime()) {
+                    nickLineIndex = i;
+                    break;
+                }
+            }
+            if (nickLineIndex == -1) continue;
+
+            int dispH = dispHDefault;
+            int dispW = Math.round(dispH * 0.9f);
+            int modelScale = Math.round(dispHDefault * 0.16f * 4.0f);
+
+            int blockMin = nickLineIndex;
+            for (int i = nickLineIndex - 1; i >= 0; i--) {
+                GuiMessage.Line line = trimmed.get(i);
+                if (line.addedTime() == msg.getAddedTime()) {
+                    blockMin = i;
+                } else {
+                    break;
+                }
+            }
+            int blockSlotIndex = blockMin;
+            if (blockSlotIndex < 0 || blockSlotIndex > nickLineIndex - 1) continue;
+
+            int lineIndexFromBottom = blockSlotIndex - scrollPos;
+            if (lineIndexFromBottom < 0 || lineIndexFromBottom >= linesPerPage) continue;
+
+            float alpha;
+            if (isChatting) {
+                alpha = mc.options.chatOpacity().get().floatValue() * 0.9f + 0.1f;
+            } else {
+                double t = (ticks - msg.getAddedTime()) / 200.0;
+                t = (1.0 - t) * 10.0;
+                t = Math.max(0.0, Math.min(1.0, t));
+                alpha = (float)(t * t) * (mc.options.chatOpacity().get().floatValue() * 0.9f + 0.1f);
+                if (alpha <= 1e-5f) continue;
+            }
+
+            int slotTopLineBottom = chatBottom - lineIndexFromBottom * entryHeight;
+            int blockBottom = slotTopLineBottom - BLOCK_VERT_PAD;
+            int blockTop    = blockBottom - dispH + BLOCK_TOP_GAP;
+
+            if (blockBottom <= chatTopScaled) continue;
+            if (blockTop >= chatBottom) continue;
+
+            int clampedTop    = Math.max(blockTop,    chatTopScaled);
+            int clampedBottom = Math.min(blockBottom, chatBottom);
+            if (clampedBottom <= clampedTop) continue;
+
+            int blockGuiX0 = Mth.floor((BLOCK_LEFT_MARGIN + 4) * scale);
+            int blockGuiX1 = Mth.floor((BLOCK_LEFT_MARGIN + 4 + dispW) * scale);
+            int blockGuiY0 = chatBottomGui - Mth.floor((chatBottom - clampedTop)    * scale);
+            int blockGuiY1 = chatBottomGui - Mth.floor((chatBottom - clampedBottom) * scale);
+            if (blockGuiX1 <= blockGuiX0 || blockGuiY1 <= blockGuiY0) continue;
+
+            guiGraphics.enableScissor(0, blockGuiY0, mc.getWindow().getGuiScaledWidth(), blockGuiY1);
+
+            int blockCenterX = (blockGuiX0 + blockGuiX1) / 2;
+            int viewportHalfW = Math.max(blockGuiX1 - blockGuiX0, mc.getWindow().getGuiScaledWidth());
+            int blockGuiX0Viewport = blockCenterX - viewportHalfW;
+            int blockGuiX1Viewport = blockCenterX + viewportHalfW;
+
+            net.minecraft.world.level.block.state.BlockState renderBlockState = chatremastered$resolveBlockState(mc, msg);
+
+            if (renderBlockState != null) {
+                int fadedScale = Math.max(1, Math.round(modelScale * alpha));
+                int shrink = modelScale - fadedScale;
+                int fadedX0 = blockGuiX0Viewport + shrink / 2;
+                int fadedX1 = blockGuiX1Viewport - shrink / 2;
+                int fadedY0 = blockGuiY0 + shrink / 2;
+                int fadedY1 = blockGuiY1 - shrink / 2;
+                if (fadedX1 <= fadedX0) fadedX1 = fadedX0 + 1;
+                if (fadedY1 <= fadedY0) fadedY1 = fadedY0 + 1;
+
+                long nowNanos = System.nanoTime();
+                if (msg.lastRotateFrameNanos != 0L) {
+                    double deltaSeconds = (nowNanos - msg.lastRotateFrameNanos) / 1_000_000_000.0;
+                    msg.rotateAngleDeg += (float) (ENTITY_ROTATE_SPEED_DEG_PER_SEC * deltaSeconds);
+                }
+                msg.lastRotateFrameNanos = nowNanos;
+                if (msg.rotateAngleDeg >= 360.0f) msg.rotateAngleDeg -= 360.0f;
+
+                chatremastered$renderBlockRotating(mc, guiGraphics, fadedX0, fadedY0, fadedX1, fadedY1,
+                        fadedScale, renderBlockState, msg.rotateAngleDeg, msg);
+            }
+
+            guiGraphics.disableScissor();
+
+            msg.setScreenBounds(blockGuiX0, blockGuiY0, blockGuiX1, blockGuiY1);
+        }
+    }
+
+    private net.minecraft.world.level.block.state.BlockState chatremastered$resolveBlockState(
+            Minecraft mc, ChatRemasteredStore.EntityMessage msg) {
+        String cacheKey = msg.blockNamespace + ":" + msg.blockPath + ":" + msg.blockState;
+        if (msg.cachedItemStack instanceof net.minecraft.world.level.block.state.BlockState cached
+                && cacheKey.equals(msg.cachedForUuid)) {
+            return cached;
+        }
+
+        net.minecraft.resources.Identifier blockId =
+                net.minecraft.resources.Identifier.fromNamespaceAndPath(msg.blockNamespace, msg.blockPath);
+        var holderOpt = net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(blockId);
+        if (holderOpt.isEmpty()) {
+            return null;
+        }
+
+        net.minecraft.world.level.block.state.BlockState state = holderOpt.get().value().defaultBlockState();
+
+        String stateJson = msg.getBlockState();
+        if (stateJson != null && stateJson.length() >= 2) {
+            try {
+                net.minecraft.nbt.CompoundTag tag = net.minecraft.nbt.TagParser.parseCompoundFully(stateJson);
+                net.minecraft.resources.RegistryOps<net.minecraft.nbt.Tag> ops =
+                        mc.level.registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE);
+                net.minecraft.world.level.block.state.BlockState parsed =
+                        net.minecraft.world.level.block.state.BlockState.CODEC.parse(ops, tag).getOrThrow();
+                if (parsed != null) {
+                    state = parsed;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        msg.cachedItemStack = state;
+        msg.cachedForUuid = cacheKey;
+        return state;
+    }
+
+    private static void chatremastered$renderBlockRotating(
+            Minecraft mc, GuiGraphics guiGraphics, int x0, int y0, int x1, int y1, int size,
+            net.minecraft.world.level.block.state.BlockState state, float angleDeg,
+            ChatRemasteredStore.EntityMessage msg) {
+        org.joml.Quaternionf rotation = new org.joml.Quaternionf()
+                .rotateX((float) Math.toRadians(25.0f));
+        rotation.mul(new org.joml.Quaternionf().rotateZ((float) Math.PI));
+        org.joml.Quaternionf yRotation = new org.joml.Quaternionf()
+                .rotateY((float) Math.toRadians(angleDeg));
+        rotation.mul(yRotation);
+
+        String cacheKey = "block:" + msg.blockNamespace + ":" + msg.blockPath + ":" + msg.blockState;
+        net.minecraft.world.entity.Display.BlockDisplay blockDisplay;
+        if (msg.cachedPlayerEntity instanceof net.minecraft.world.entity.Display.BlockDisplay cached
+                && cacheKey.equals(msg.cachedForUuid)) {
+            blockDisplay = cached;
+        } else {
+            blockDisplay = new net.minecraft.world.entity.Display.BlockDisplay(
+                    net.minecraft.world.entity.EntityType.BLOCK_DISPLAY, mc.level);
+            msg.cachedPlayerEntity = blockDisplay;
+            msg.cachedForUuid = cacheKey;
+        }
+
+        net.minecraft.client.renderer.entity.EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
+        net.minecraft.client.renderer.entity.EntityRenderer<? super net.minecraft.world.entity.Display.BlockDisplay, ?> renderer =
+                dispatcher.getRenderer(blockDisplay);
+        net.minecraft.client.renderer.entity.state.EntityRenderState renderState =
+                renderer.createRenderState(blockDisplay, 0.0f);
+        renderState.ageInTicks = 0.0f;
+        renderState.lightCoords = 15728880;
+        renderState.shadowPieces.clear();
+        renderState.outlineColor = 0;
+        if (renderState instanceof net.minecraft.client.renderer.entity.state.BlockDisplayEntityRenderState blockState) {
+            blockState.blockRenderState =
+                    new net.minecraft.world.entity.Display.BlockDisplay.BlockRenderState(state);
+            blockState.renderState = new net.minecraft.world.entity.Display.RenderState(
+                    net.minecraft.world.entity.Display.GenericInterpolator.constant(
+                            new com.mojang.math.Transformation(
+                                    new org.joml.Vector3f(-0.5f, -0.5f, -0.5f),
+                                    new org.joml.Quaternionf(),
+                                    new org.joml.Vector3f(1.0f, 1.0f, 1.0f),
+                                    new org.joml.Quaternionf())),
+                    net.minecraft.world.entity.Display.BillboardConstraints.FIXED,
+                    0,
+                    net.minecraft.world.entity.Display.FloatInterpolator.constant(0.0f),
+                    net.minecraft.world.entity.Display.FloatInterpolator.constant(0.0f),
+                    0);
+        }
+
+        org.joml.Vector3f translation = new org.joml.Vector3f(0.0f, 0.0f, 0.0f);
         guiGraphics.submitEntityRenderState(renderState, size, translation, rotation, yRotation, x0, y0, x1, y1);
     }
 
