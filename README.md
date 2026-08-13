@@ -3,10 +3,14 @@
 [![Modrinth Downloads](https://img.shields.io/modrinth/dt/chat-remastered?style=for-the-badge&logo=modrinth&logoColor=white)](https://modrinth.com/plugin/chat-remastered)
 [![Modrinth](https://img.shields.io/badge/Modrinth-Download-00AF5C?style=for-the-badge&logo=modrinth&logoColor=white)](https://modrinth.com/plugin/chat-remastered)
 [![Game Versions](https://img.shields.io/modrinth/game-versions/chat-remastered?style=for-the-badge&logo=modrinth&logoColor=white)](https://modrinth.com/plugin/chat-remastered)
-[![Fabric](https://img.shields.io/badge/Fabric-Supported-DBD0B4?style=for-the-badge)](https://modrinth.com/plugin/chat-remastered)
-[![Paper](https://img.shields.io/badge/Paper-Supported-00AEEF?style=for-the-badge)](https://modrinth.com/plugin/chat-remastered)
-[![Spigot](https://img.shields.io/badge/Spigot-Supported-E74C3C?style=for-the-badge)](https://modrinth.com/plugin/chat-remastered)
-[![NeoForge](https://img.shields.io/badge/NeoForge-In_Development-FF6A00?style=for-the-badge)](https://modrinth.com/plugin/chat-remastered)
+
+[![Fabric](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/fabric_vector.svg)](https://fabricmc.net/)
+[![Paper](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg)](https://papermc.io/)
+[![Spigot](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/spigot_vector.svg)](https://www.spigotmc.org/)
+[![NeoForge](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/unsupported/neoforge_vector.svg)](https://neoforged.net/)
+
+[![Fabric API](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/requires/fabric-api_vector.svg)](https://modrinth.com/mod/fabric-api)
+[![Cloth Config API](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/requires/cloth-config-api_vector.svg)](https://modrinth.com/mod/cloth-config)
 
 A complete rewrite of the Minecraft chat experience. Send media, reply to messages, use context menus, render items and entities in chat, and customize everything seamlessly.
 
