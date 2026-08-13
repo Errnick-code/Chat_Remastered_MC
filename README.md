@@ -1,5 +1,8 @@
 # 💬 Chat Remastered — Global Chat Overhaul
 
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/chat-remastered?style=for-the-badge&logo=modrinth&logoColor=white)](https://modrinth.com/mod/chat-remastered)
+[![Modrinth](https://img.shields.io/badge/Modrinth-Download-00AF5C?style=for-the-badge&logo=modrinth&logoColor=white)](https://modrinth.com/mod/chat-remastered)
+
 A complete rewrite of the Minecraft chat experience. Send media, reply to messages, use context menus, render items and entities in chat, and customize everything seamlessly.
 
 ---
