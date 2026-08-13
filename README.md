@@ -1,7 +1,8 @@
 # 💬 Chat Remastered — Global Chat Overhaul
 
+[![Modrinth](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_vector.svg)](https://modrinth.com/plugin/chat-remastered)
+
 [![Modrinth Downloads](https://img.shields.io/modrinth/dt/chat-remastered?style=for-the-badge&logo=modrinth&logoColor=white)](https://modrinth.com/plugin/chat-remastered)
-[![Modrinth](https://img.shields.io/badge/Modrinth-Download-00AF5C?style=for-the-badge&logo=modrinth&logoColor=white)](https://modrinth.com/plugin/chat-remastered)
 [![Game Versions](https://img.shields.io/modrinth/game-versions/chat-remastered?style=for-the-badge&logo=modrinth&logoColor=white)](https://modrinth.com/plugin/chat-remastered)
 
 [![Fabric](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/fabric_vector.svg)](https://fabricmc.net/)
