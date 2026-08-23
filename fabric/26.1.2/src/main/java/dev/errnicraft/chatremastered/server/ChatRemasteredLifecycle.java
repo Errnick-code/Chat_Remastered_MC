@@ -110,6 +110,7 @@ public final class ChatRemasteredLifecycle {
 
     private static void registerJoin() {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            server.execute(() -> dev.errnicraft.chatremastered.server.groups.GroupNetwork.sendState(handler.getPlayer()));
             ServerPlayer player = handler.getPlayer();
 
             Thread thread = new Thread(() -> {

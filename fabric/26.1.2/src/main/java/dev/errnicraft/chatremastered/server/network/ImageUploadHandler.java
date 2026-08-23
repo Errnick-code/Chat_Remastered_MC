@@ -5,6 +5,7 @@ import dev.errnicraft.chatremastered.network.packet.ImageErrorPacket;
 import dev.errnicraft.chatremastered.network.packet.ImageUploadedPacket;
 import dev.errnicraft.chatremastered.network.packet.PhotoDeniedPacket;
 import dev.errnicraft.chatremastered.server.ChatRemasteredState;
+import dev.errnicraft.chatremastered.server.groups.GroupNetwork;
 import dev.errnicraft.chatremastered.server.moderation.ModerationActions;
 import dev.errnicraft.chatremastered.tcp.ImageTcpServer;
 import dev.errnicraft.chatremastered.text.LegacyNickParser;
@@ -127,9 +128,21 @@ public final class ImageUploadHandler {
                 payload.replyToSender(), payload.replyToText(), payload.replyToImageId(),
                 payload.groupId(), payload.groupIndex(), payload.groupCount());
         server.execute(() -> {
-            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                if (ChatRemasteredState.hasModInstalled(player.getUUID()) && !player.getUUID().equals(senderUuid)) {
-                    ServerPlayNetworking.send(player, packet);
+            if (!GroupNetwork.tryGroupBroadcast(server, senderUuid, (player, g) -> {
+                if (ChatRemasteredState.hasModInstalled(player.getUUID())) {
+                    ImageChatPacket groupPacket = new ImageChatPacket(imageId, sender,
+                            caption, width, height,
+                            GroupNetwork.groupNick(sender, g),
+                            payload.replyToSender(), payload.replyToText(), payload.replyToImageId(),
+                            payload.groupId(), payload.groupIndex(), payload.groupCount(),
+                            GroupNetwork.groupLabelLegacy(g), GroupNetwork.groupBodyRgb(g));
+                    ServerPlayNetworking.send(player, groupPacket);
+                }
+            })) {
+                for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                    if (ChatRemasteredState.hasModInstalled(player.getUUID()) && !player.getUUID().equals(senderUuid)) {
+                        ServerPlayNetworking.send(player, packet);
+                    }
                 }
             }
         });

@@ -101,6 +101,12 @@ public final class ScreenshotsPanel {
         return open || openAnim > 0.001f;
     }
 
+    public boolean isMouseOver(int screenW, int screenH, double mx, double my) {
+        if (!isOpen()) return false;
+        int px = panelX(screenW, screenH);
+        return mx >= px && mx < px + PANEL_W && my >= 0 && my < screenH;
+    }
+
     public void open() {
         if (open) return;
         open = true;
@@ -264,6 +270,10 @@ public final class ScreenshotsPanel {
                 && mouseY >= closeY && mouseY < closeY + CLOSE_SIZE;
         int closeColor = hoverClose ? 0xFFFF5555 : 0xAAFFFFFF;
         graphics.centeredText(mc.font, "✕", closeX + CLOSE_SIZE / 2, closeY + (CLOSE_SIZE - mc.font.lineHeight) / 2, closeColor);
+        if (hoverClose) {
+            graphics.setComponentTooltipForNextFrame(mc.font,
+                    java.util.List.of(Component.translatable("chat-remastered.panel_close")), mouseX, mouseY);
+        }
 
         int listTop = HEADER_H + PADDING;
         int listBottom = screenH - PADDING - FOLDER_BAR_H - GAP;
@@ -351,6 +361,22 @@ public final class ScreenshotsPanel {
             boolean active = i == activeFolderIndex;
             boolean hover = mouseX >= x && mouseX < x + FOLDER_BTN_SIZE
                     && mouseY >= barTop && mouseY < barTop + FOLDER_BTN_SIZE;
+            if (hover) {
+                java.util.List<Component> tip = new ArrayList<>();
+                if (i == 0) {
+                    tip.add(Component.translatable("chat-remastered.panel_folder_default"));
+                    tip.add(Component.translatable("chat-remastered.panel_folder_default.desc")
+                            .withStyle(net.minecraft.ChatFormatting.GRAY));
+                } else {
+                    List<String> foldersCfg = ChatRemasteredConfig.getScreenshotFolders();
+                    int fi = i - 1;
+                    String name = (fi >= 0 && fi < foldersCfg.size()) ? new File(foldersCfg.get(fi)).getName() : "?";
+                    tip.add(Component.literal(name));
+                    tip.add(Component.translatable("chat-remastered.panel_folder_custom.desc")
+                            .withStyle(net.minecraft.ChatFormatting.GRAY));
+                }
+                graphics.setComponentTooltipForNextFrame(mc.font, tip, mouseX, mouseY);
+            }
             Identifier tex = i == 0
                     ? (active || hover ? SCREENSHOTS_ACTIVE_TEX : SCREENSHOTS_TEX)
                     : (active || hover ? FOLDER_ACTIVE_TEX : FOLDER_TEX);
@@ -362,6 +388,14 @@ public final class ScreenshotsPanel {
 
         boolean hoverAdd = mouseX >= x && mouseX < x + FOLDER_BTN_SIZE
                 && mouseY >= barTop && mouseY < barTop + FOLDER_BTN_SIZE;
+        if (hoverAdd) {
+            graphics.setComponentTooltipForNextFrame(mc.font,
+                    java.util.List.of(
+                            Component.translatable("chat-remastered.panel_add_folder"),
+                            Component.translatable("chat-remastered.panel_add_folder.desc")
+                                    .withStyle(net.minecraft.ChatFormatting.GRAY)),
+                    mouseX, mouseY);
+        }
         if (x + FOLDER_BTN_SIZE >= barLeft && x <= barRight) {
             Identifier addTex = hoverAdd ? ADD_ACTIVE_TEX : ADD_TEX;
             graphics.blit(RenderPipelines.GUI_TEXTURED, addTex, x, barTop, 0f, 0f, FOLDER_BTN_SIZE, FOLDER_BTN_SIZE, FOLDER_BTN_SIZE, FOLDER_BTN_SIZE);

@@ -18,6 +18,18 @@ public final class ChatRemasteredClient implements ClientModInitializer {
         DragDropHandler.register();
 
         NetworkPacketHandlers.register();
+        dev.errnicraft.chatremastered.GroupModeState.load();
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(dev.errnicraft.chatremastered.network.packet.GroupChatPacket.TYPE, (payload, context) -> {
+            dev.errnicraft.chatremastered.GroupModeState.inGroup = payload.inGroup();
+            dev.errnicraft.chatremastered.GroupModeState.groupName = payload.groupName();
+            if (!payload.inGroup()) dev.errnicraft.chatremastered.GroupModeState.mode = 0;
+            if (payload.inGroup() && context.client() != null) {
+                context.client().execute(() ->
+                        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                                new dev.errnicraft.chatremastered.network.packet.GroupModePacket(
+                                        dev.errnicraft.chatremastered.GroupModeState.mode == 1)));
+            }
+        });
         DebugCommands.register();
     }
 

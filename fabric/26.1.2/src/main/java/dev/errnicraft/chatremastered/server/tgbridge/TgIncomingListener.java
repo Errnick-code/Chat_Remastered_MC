@@ -45,7 +45,19 @@ final class TgIncomingListener {
         addListenerMethod.invoke(handler, consumer);
     }
 
+    private static final int MAX_PACKET_TEXT = 180;
+
+    private static String clamp(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.length() <= MAX_PACKET_TEXT ? s : s.substring(0, MAX_PACKET_TEXT - 1) + "…";
+    }
+
     private static void onTgChatMessageEvent(TgBridgeState state, Object event) throws Exception {
+        if (net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("tgphotobridge")) {
+            return;
+        }
         Class<?> eventClass = event.getClass();
         Object message = eventClass.getMethod("getMessage").invoke(event);
         if (message == null) {
@@ -87,8 +99,10 @@ final class TgIncomingListener {
                 return;
             }
             String replyImageId = "tg_" + replyMessageId;
+            final String safeSender = senderName;
+            final String safeText = clamp(effectiveText);
             server.execute(() -> broadcastImageReplyFromTelegram(
-                    server, senderName, effectiveText, replySenderName, replyImageId));
+                    server, safeSender, safeText, replySenderName, replyImageId));
             return;
         }
 
@@ -104,8 +118,12 @@ final class TgIncomingListener {
         }
 
         eventClass.getMethod("setCancelled", boolean.class).invoke(event, true);
+        final String safeSender = senderName;
+        final String safeText = clamp(effectiveText);
+        final String safeReplySender = replySenderName;
+        final String safeReplyText = clamp(replyEffectiveText);
         server.execute(() ->
-                broadcastReplyFromTelegram(server, senderName, effectiveText, replySenderName, replyEffectiveText));
+                broadcastReplyFromTelegram(server, safeSender, safeText, safeReplySender, safeReplyText));
     }
 
     private static String resolveReplySenderName(TgBridgeState state, Class<?> replyClass, Object replyToMessage,
@@ -152,6 +170,7 @@ final class TgIncomingListener {
 
     private static void broadcastImageReplyFromTelegram(MinecraftServer server, String senderName, String text,
                                                           String replyToSender, String replyToImageId) {
+        text = clamp(text);
         int senderColor = TgBridgeState.getSenderColor();
         Component senderComp = Component.literal(senderName).withStyle(s -> s.withColor(senderColor));
         ReplyChatPacket replyPacket = new ReplyChatPacket(senderName, senderComp, text, replyToSender, "", replyToImageId);
@@ -174,6 +193,8 @@ final class TgIncomingListener {
 
     private static void broadcastReplyFromTelegram(MinecraftServer server, String senderName, String text,
                                                      String replyToSender, String replyToText) {
+        text = clamp(text);
+        replyToText = clamp(replyToText);
         int senderColor = TgBridgeState.getSenderColor();
         Component senderComp = Component.literal(senderName).withStyle(s -> s.withColor(senderColor));
         ReplyChatPacket replyPacket = new ReplyChatPacket(senderName, senderComp, text, replyToSender, replyToText, "");

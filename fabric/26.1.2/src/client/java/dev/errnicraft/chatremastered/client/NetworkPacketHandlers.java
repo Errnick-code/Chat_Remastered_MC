@@ -297,11 +297,12 @@ public final class NetworkPacketHandlers {
 
                     ChatMessageRenderer.addImageReplyToChat(context.client(), payload.imageId(), payload.sender(),
                             payload.caption(), payload.width(), payload.height(), payload.senderComponent(),
-                            payload.replyToSender(), payload.replyToText(), payload.replyToImageId(), payload.groupId());
+                            payload.replyToSender(), payload.replyToText(), payload.replyToImageId(), payload.groupId(),
+                            payload.groupLabel(), payload.bodyRgb());
                 } else {
                     ChatMessageRenderer.addImageToChat(context.client(), payload.imageId(), payload.sender(),
                             payload.caption(), payload.width(), payload.height(), payload.senderComponent(),
-                            false, payload.groupId());
+                            false, payload.groupId(), payload.groupLabel(), payload.bodyRgb());
                 }
             });
         });
@@ -309,25 +310,27 @@ public final class NetworkPacketHandlers {
         ClientPlayNetworking.registerGlobalReceiver(ReplyChatPacket.TYPE, (payload, context) ->
                 context.client().execute(() -> ChatMessageRenderer.addReplyToChat(context.client(), payload.sender(),
                         payload.text(), payload.senderComponent(), payload.replyToSender(), payload.replyToText(),
-                        payload.replyToImageId())));
+                        payload.replyToImageId(), payload.groupLabel(), payload.bodyRgb())));
 
         ClientPlayNetworking.registerGlobalReceiver(EntityChatPacket.TYPE, (payload, context) ->
                 context.client().execute(() -> EntityChatRenderer.addEntityToChat(context.client(), payload.sender(),
-                        payload.senderComponent(), payload.targetPlayerName(), payload.behavior(), payload.caption())));
+                        payload.senderComponent(), payload.targetPlayerName(), payload.behavior(), payload.caption(),
+                        payload.groupLabel(), payload.bodyRgb())));
 
         ClientPlayNetworking.registerGlobalReceiver(EntityMobChatPacket.TYPE, (payload, context) ->
                 context.client().execute(() -> EntityChatRenderer.addEntityMobToChat(context.client(), payload.sender(),
                         payload.senderComponent(), payload.entityNamespace(), payload.entityPath(), payload.entityNbt(),
-                        payload.behavior(), payload.size(), payload.offsetX(), payload.offsetY(), payload.caption())));
+                        payload.behavior(), payload.size(), payload.offsetX(), payload.offsetY(), payload.caption(),
+                        payload.groupLabel(), payload.bodyRgb())));
 
         ClientPlayNetworking.registerGlobalReceiver(ItemChatPacket.TYPE, (payload, context) ->
                 context.client().execute(() -> EntityChatRenderer.addItemToChat(context.client(), payload.sender(),
                         payload.senderComponent(), payload.itemNamespace(), payload.itemPath(), payload.itemNbt(),
-                        payload.caption())));
+                        payload.caption(), payload.groupLabel(), payload.bodyRgb())));
 
         ClientPlayNetworking.registerGlobalReceiver(BlockChatPacket.TYPE, (payload, context) ->
                 context.client().execute(() -> EntityChatRenderer.addBlockToChat(context.client(), payload.sender(),
                         payload.senderComponent(), payload.blockNamespace(), payload.blockPath(), payload.blockState(),
-                        payload.caption())));
+                        payload.caption(), payload.groupLabel(), payload.bodyRgb())));
     }
 }

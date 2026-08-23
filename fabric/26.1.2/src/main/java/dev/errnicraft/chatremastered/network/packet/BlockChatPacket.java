@@ -14,7 +14,9 @@ public record BlockChatPacket(
         String blockNamespace,
         String blockPath,
         String blockState,
-        String caption
+        String caption,
+        String groupLabel,
+        int bodyRgb
 ) implements CustomPacketPayload {
 
     public static final Identifier ID = Identifier.fromNamespaceAndPath("chat-remastered", "block_chat");
@@ -27,7 +29,9 @@ public record BlockChatPacket(
                 buf.writeUtf(pkt.blockNamespace, 64);
                 buf.writeUtf(pkt.blockPath, 128);
                 buf.writeUtf(pkt.blockState, 512);
-                buf.writeUtf(pkt.caption, 256);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.caption, 256), 256);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.groupLabel, 48), 48);
+                buf.writeInt(pkt.bodyRgb);
             },
             buf -> new BlockChatPacket(
                     buf.readUtf(64),
@@ -35,12 +39,19 @@ public record BlockChatPacket(
                     buf.readUtf(64),
                     buf.readUtf(128),
                     buf.readUtf(512),
-                    buf.readUtf(256)
+                    buf.readUtf(256),
+                    buf.readUtf(48),
+                    buf.readInt()
             )
     );
 
+    public BlockChatPacket(String sender, Component senderComponent, String blockNamespace,
+                           String blockPath, String blockState, String caption) {
+        this(sender, senderComponent, blockNamespace, blockPath, blockState, caption, "", 0);
+    }
+
     public BlockChatPacket(String blockNamespace, String blockPath, String blockState, String caption) {
-        this("", Component.literal(""), blockNamespace, blockPath, blockState, caption);
+        this("", Component.literal(""), blockNamespace, blockPath, blockState, caption, "", 0);
     }
 
     @Override

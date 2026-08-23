@@ -36,6 +36,13 @@ public final class BlockChatHandler {
             Component senderComp = LegacyNickParser.parseLegacyNick(rawComp, senderName);
             String caption = payload.caption().length() > 256 ? payload.caption().substring(0, 256) : payload.caption();
 
+            if (!dev.errnicraft.chatremastered.server.groups.GroupNetwork.tryGroupBroadcast(context.server(), player, (p, g) -> {
+                ServerPlayNetworking.send(p, new dev.errnicraft.chatremastered.network.packet.BlockChatPacket(
+                        senderName,
+                        dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupNick(senderName, g),
+                        blockNamespace, blockPath, blockState,
+                        dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupLabelLegacy(g) + " §r" + dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupBodyLegacy(g, caption)));
+            })) return;
             BlockChatPacket outPacket = new BlockChatPacket(
                     senderName, senderComp, blockNamespace, blockPath, blockState, caption);
 

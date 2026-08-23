@@ -169,26 +169,18 @@ public final class ServerConfigLoader {
             }
             String content = """
                     {
-                      // Image resolution: 360 | 480 | 720 | HD | 2K
                       "resolution": "%s",
 
-                      // TCP server port for images. Open it in firewall!
-                      // If port is busy — change imagePort here and restart.
                       "imagePort": %d,
 
-                      // Cooldown in seconds between photo sends per player. 0 = no cooldown. Default: 5.
                       "photoCooldownSeconds": %d,
 
-                      // If true — players can send animated GIFs. Default: true.
                       "gifEnabled": %b,
 
-                      // Maximum GIF resolution (width/height) players can upload. Range: 240..1920. Default: 480.
                       "gifMaxDim": %d,
 
-                      // How many photos a player can send at once in a single message. Range: 1..10. Default: 1.
                       "maxPhotosPerMessage": %d,
 
-                      // Message sent to a muted player when they try to send a chat message, photo or reply. Supports UTF-8.
                       "mutedMessage": "%s"
                     }
                     """.formatted(

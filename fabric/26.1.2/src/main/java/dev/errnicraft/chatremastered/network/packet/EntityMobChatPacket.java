@@ -18,7 +18,9 @@ public record EntityMobChatPacket(
         int size,
         int offsetX,
         int offsetY,
-        String caption
+        String caption,
+        String groupLabel,
+        int bodyRgb
 ) implements CustomPacketPayload {
 
     public static final Identifier ID = Identifier.fromNamespaceAndPath("chat-remastered", "entity_mob_chat");
@@ -35,7 +37,9 @@ public record EntityMobChatPacket(
                 buf.writeVarInt(pkt.size);
                 buf.writeVarInt(pkt.offsetX);
                 buf.writeVarInt(pkt.offsetY);
-                buf.writeUtf(pkt.caption, 256);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.caption, 256), 256);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.groupLabel, 48), 48);
+                buf.writeInt(pkt.bodyRgb);
             },
             buf -> new EntityMobChatPacket(
                     buf.readUtf(64),
@@ -47,14 +51,23 @@ public record EntityMobChatPacket(
                     buf.readVarInt(),
                     buf.readVarInt(),
                     buf.readVarInt(),
-                    buf.readUtf(256)
+                    buf.readUtf(256),
+                    buf.readUtf(48),
+                    buf.readInt()
             )
     );
+
+    public EntityMobChatPacket(String sender, Component senderComponent, String entityNamespace,
+                               String entityPath, String entityNbt, String behavior,
+                               int size, int offsetX, int offsetY, String caption) {
+        this(sender, senderComponent, entityNamespace, entityPath, entityNbt, behavior,
+                size, offsetX, offsetY, caption, "", 0);
+    }
 
     public EntityMobChatPacket(String entityNamespace, String entityPath, String entityNbt,
                                 String behavior, int size, int offsetX, int offsetY, String caption) {
         this("", Component.literal(""), entityNamespace, entityPath, entityNbt, behavior,
-                size, offsetX, offsetY, caption);
+                size, offsetX, offsetY, caption, "", 0);
     }
 
     @Override

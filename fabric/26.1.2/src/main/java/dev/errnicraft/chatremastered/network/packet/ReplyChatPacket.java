@@ -14,7 +14,9 @@ public record ReplyChatPacket(
         String text,
         String replyToSender,
         String replyToText,
-        String replyToImageId
+        String replyToImageId,
+        String groupLabel,
+        int bodyRgb
 ) implements CustomPacketPayload {
 
     public static final Identifier ID = Identifier.fromNamespaceAndPath("chat-remastered", "reply_chat");
@@ -22,12 +24,14 @@ public record ReplyChatPacket(
 
     public static final StreamCodec<FriendlyByteBuf, ReplyChatPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {
-                buf.writeUtf(pkt.sender, 64);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.sender, 64), 64);
                 buf.writeUtf(NetworkComponentJson.toJson(pkt.senderComponent));
-                buf.writeUtf(pkt.text, 256);
-                buf.writeUtf(pkt.replyToSender, 64);
-                buf.writeUtf(pkt.replyToText, 256);
-                buf.writeUtf(pkt.replyToImageId, 64);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.text, 256), 256);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.replyToSender, 64), 64);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.replyToText, 256), 256);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.replyToImageId, 64), 64);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.groupLabel, 48), 48);
+                buf.writeInt(pkt.bodyRgb);
             },
             buf -> new ReplyChatPacket(
                     buf.readUtf(64),
@@ -35,9 +39,16 @@ public record ReplyChatPacket(
                     buf.readUtf(256),
                     buf.readUtf(64),
                     buf.readUtf(256),
-                    buf.readUtf(64)
+                    buf.readUtf(64),
+                    buf.readUtf(48),
+                    buf.readInt()
             )
     );
+
+    public ReplyChatPacket(String sender, Component senderComponent, String text,
+                           String replyToSender, String replyToText, String replyToImageId) {
+        this(sender, senderComponent, text, replyToSender, replyToText, replyToImageId, "", 0);
+    }
 
     @Override
     public CustomPacketPayload.Type<ReplyChatPacket> type() {

@@ -33,14 +33,17 @@ public final class ReplyHandler {
             Component senderComp = LegacyNickParser.parseLegacyNick(rawComp, senderName);
             String text = payload.text().length() > 256 ? payload.text().substring(0, 256) : payload.text();
 
-            ReplyChatPacket replyPacket = new ReplyChatPacket(
-                    senderName,
-                    senderComp,
-                    text,
-                    payload.replyToSender(),
-                    payload.replyToText(),
-                    payload.replyToImageId()
-            );
+            if (!dev.errnicraft.chatremastered.server.groups.GroupNetwork.tryGroupBroadcast(context.server(), player, (p, g) -> {
+                ServerPlayNetworking.send(p, new dev.errnicraft.chatremastered.network.packet.ReplyChatPacket(
+                        senderName,
+                        dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupNick(senderName, g),
+                        dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupLabelLegacy(g) + " §r" + dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupBodyLegacy(g, text),
+                        payload.replyToSender(), payload.replyToText(), payload.replyToImageId()));
+            })) return;
+        ReplyChatPacket replyPacket = new ReplyChatPacket(
+                senderName, senderComp, text,
+                payload.replyToSender(), payload.replyToText(), payload.replyToImageId()
+        );
             Component plainMsg = Component.empty()
                     .append(Component.literal("<"))
                     .append(senderComp)

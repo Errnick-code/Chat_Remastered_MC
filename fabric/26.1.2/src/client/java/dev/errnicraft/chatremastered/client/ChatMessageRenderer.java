@@ -58,15 +58,30 @@ public final class ChatMessageRenderer {
 
     public static void addReplyToChat(Minecraft mc, String sender, String text, Component senderComponent,
                                        String replyToSender, String replyToText, String replyToImageId) {
+        addReplyToChat(mc, sender, text, senderComponent, replyToSender, replyToText, replyToImageId, "", 0);
+    }
+
+    public static void addReplyToChat(Minecraft mc, String sender, String text, Component senderComponent,
+                                       String replyToSender, String replyToText, String replyToImageId,
+                                       String groupLabel, int bodyRgb) {
         Component senderComp = resolveSenderComponent(mc, sender, senderComponent);
         var bracketStyle = resolveBracketStyle(senderComp);
 
         MutableComponent msgText = MutableComponent.create(PlainTextContents.EMPTY);
         msgText.append(Component.literal("\n"));
+        if (groupLabel != null && !groupLabel.isEmpty()) {
+            msgText.append(NickFormatting.parseLegacyNick(Component.literal(groupLabel)));
+            msgText.append(Component.literal(" "));
+        }
         msgText.append(Component.literal("<").withStyle(bracketStyle));
         msgText.append(senderComp);
         msgText.append(Component.literal(">").withStyle(bracketStyle));
-        msgText.append(Component.literal(" " + text));
+        if (bodyRgb != 0) {
+            msgText.append(Component.literal(" " + text)
+                    .withStyle(s -> s.withColor(net.minecraft.network.chat.TextColor.fromRgb(bodyRgb))));
+        } else {
+            msgText.append(Component.literal(" " + text));
+        }
 
         mc.gui.getChat().addClientSystemMessage(msgText);
         int addedTime = ChatTimeHolder.lastAddedTime;
@@ -86,10 +101,26 @@ public final class ChatMessageRenderer {
                                             int width, int height, Component senderComponent,
                                             String replyToSender, String replyToText, String replyToImageId,
                                             String groupId) {
+        addImageReplyToChat(mc, imageId, sender, caption, width, height, senderComponent,
+                replyToSender, replyToText, replyToImageId, groupId, "", 0);
+    }
+
+    public static void addImageReplyToChat(Minecraft mc, String imageId, String sender, String caption,
+                                            int width, int height, Component senderComponent,
+                                            String replyToSender, String replyToText, String replyToImageId,
+                                            String groupId, String groupLabel) {
+        addImageReplyToChat(mc, imageId, sender, caption, width, height, senderComponent,
+                replyToSender, replyToText, replyToImageId, groupId, groupLabel, 0);
+    }
+
+    public static void addImageReplyToChat(Minecraft mc, String imageId, String sender, String caption,
+                                            int width, int height, Component senderComponent,
+                                            String replyToSender, String replyToText, String replyToImageId,
+                                            String groupId, String groupLabel, int bodyRgb) {
         Component senderComp = resolveSenderComponent(mc, sender, senderComponent);
         String captionSafe = caption != null ? caption : "";
 
-        addImageToChat(mc, imageId, sender, caption, width, height, senderComponent, true, groupId);
+        addImageToChat(mc, imageId, sender, caption, width, height, senderComponent, true, groupId, groupLabel, bodyRgb);
         int addedTime = -1;
         for (var m : ChatRemasteredStore.getMessageList()) {
             if (m.getImageId().equals(imageId)) {
@@ -116,6 +147,18 @@ public final class ChatMessageRenderer {
 
     public static void addImageToChat(Minecraft mc, String imageId, String sender, String caption, int width, int height,
                                        Component senderComponent, boolean extraReplyLine, String groupId) {
+        addImageToChat(mc, imageId, sender, caption, width, height, senderComponent, extraReplyLine, groupId, "", 0);
+    }
+
+    public static void addImageToChat(Minecraft mc, String imageId, String sender, String caption, int width, int height,
+                                       Component senderComponent, boolean extraReplyLine, String groupId,
+                                       String groupLabel) {
+        addImageToChat(mc, imageId, sender, caption, width, height, senderComponent, extraReplyLine, groupId, groupLabel, 0);
+    }
+
+    public static void addImageToChat(Minecraft mc, String imageId, String sender, String caption, int width, int height,
+                                       Component senderComponent, boolean extraReplyLine, String groupId,
+                                       String groupLabel, int bodyRgb) {
 
         Component senderComp = resolveSenderComponent(mc, sender, senderComponent);
         var bracketStyle = resolveBracketStyle(senderComp);
@@ -138,11 +181,20 @@ public final class ChatMessageRenderer {
         int extraLines = (int) Math.ceil((double) dispH / entryHeight);
 
         MutableComponent msgText = MutableComponent.create(PlainTextContents.EMPTY);
+        if (groupLabel != null && !groupLabel.isEmpty()) {
+            msgText.append(NickFormatting.parseLegacyNick(Component.literal(groupLabel)));
+            msgText.append(Component.literal(" "));
+        }
         msgText.append(Component.literal("<").withStyle(bracketStyle));
         msgText.append(senderComp);
         msgText.append(Component.literal(">").withStyle(bracketStyle));
         if (caption != null && !caption.isEmpty()) {
-            msgText.append(Component.literal(" " + caption));
+            if (bodyRgb != 0) {
+                msgText.append(Component.literal(" " + caption)
+                        .withStyle(s -> s.withColor(net.minecraft.network.chat.TextColor.fromRgb(bodyRgb))));
+            } else {
+                msgText.append(Component.literal(" " + caption));
+            }
         }
         msgText.append(Component.literal(" §7[📷]"));
 

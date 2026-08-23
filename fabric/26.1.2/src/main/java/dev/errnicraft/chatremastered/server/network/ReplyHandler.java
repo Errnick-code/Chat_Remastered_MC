@@ -2,6 +2,7 @@ package dev.errnicraft.chatremastered.server.network;
 
 import dev.errnicraft.chatremastered.server.tgbridge.TgBridgeCompat;
 import dev.errnicraft.chatremastered.network.packet.PhotoDeniedPacket;
+import dev.errnicraft.chatremastered.server.groups.GroupNetwork;
 import dev.errnicraft.chatremastered.network.packet.ReplyChatPacket;
 import dev.errnicraft.chatremastered.network.packet.ReplyMetaPacket;
 import dev.errnicraft.chatremastered.server.ChatRemasteredState;
@@ -46,12 +47,26 @@ public final class ReplyHandler {
                     .append(senderComp)
                     .append(Component.literal("> " + text));
 
-            for (ServerPlayer p : context.server().getPlayerList().getPlayers()) {
-                if (p.getChatVisibility() == ChatVisiblity.FULL) {
-                    if (ChatRemasteredState.hasModInstalled(p.getUUID())) {
-                        ServerPlayNetworking.send(p, replyPacket);
-                    } else {
-                        p.sendSystemMessage(plainMsg);
+            if (!GroupNetwork.tryGroupBroadcast(context.server(), player, (p, g) -> {
+                ReplyChatPacket groupPacket = new ReplyChatPacket(
+                        senderName,
+                        GroupNetwork.groupNick(senderName, g),
+                        text,
+                        payload.replyToSender(),
+                        payload.replyToText(),
+                        payload.replyToImageId(),
+                        GroupNetwork.groupLabelLegacy(g),
+                        GroupNetwork.groupBodyRgb(g)
+                );
+                ServerPlayNetworking.send(p, groupPacket);
+            })) {
+                for (ServerPlayer p : context.server().getPlayerList().getPlayers()) {
+                    if (p.getChatVisibility() == ChatVisiblity.FULL) {
+                        if (ChatRemasteredState.hasModInstalled(p.getUUID())) {
+                            ServerPlayNetworking.send(p, replyPacket);
+                        } else {
+                            p.sendSystemMessage(plainMsg);
+                        }
                     }
                 }
             }

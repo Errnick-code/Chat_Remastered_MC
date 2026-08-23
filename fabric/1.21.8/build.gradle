@@ -60,10 +60,28 @@ processResources {
     }
 }
 
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
 jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveVersion = "${rootProject.mod_version}+${mcVersion}"
 
     from("${rootDir}/LICENSE") {
         rename { "${it}_${project.base.archivesName}" }
     }
+}
+
+tasks.matching { it.name == 'sourcesJar' }.configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

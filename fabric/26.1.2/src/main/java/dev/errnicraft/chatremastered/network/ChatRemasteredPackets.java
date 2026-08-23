@@ -15,6 +15,8 @@ import dev.errnicraft.chatremastered.network.packet.ImageUploadedPacket;
 import dev.errnicraft.chatremastered.network.packet.ItemChatPacket;
 import dev.errnicraft.chatremastered.network.packet.PhotoDeniedPacket;
 import dev.errnicraft.chatremastered.network.packet.PhotoUnbannedPacket;
+import dev.errnicraft.chatremastered.network.packet.GroupChatPacket;
+import dev.errnicraft.chatremastered.network.packet.GroupModePacket;
 import dev.errnicraft.chatremastered.network.packet.ReplyChatPacket;
 import dev.errnicraft.chatremastered.network.packet.ReplyMetaPacket;
 import dev.errnicraft.chatremastered.network.packet.ReplyPacket;
@@ -44,6 +46,8 @@ public final class ChatRemasteredPackets {
         ReplyPacket.register();
         ReplyMetaPacket.register();
         ReplyChatPacket.register();
+        GroupChatPacket.register();
+        GroupModePacket.register();
     }
 
     private ChatRemasteredPackets() {

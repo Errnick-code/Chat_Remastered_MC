@@ -397,31 +397,22 @@ public final class ChatRemasteredConfig {
                     {
                       "configVersion": %d,
 
-                      // Масштаб превью фото в чате: 0.5..2.0. Default: 1.0.
                       "previewScale": %s,
 
-                      // Масштаб карточки над полем ввода (pending image): 0.5..2.0. Default: 1.0.
                       "inputPreviewScale": %s,
 
-                      // Высота открытого чата: false = ванильная (примерно половина экрана), true = на весь экран.
                       "fullscreenChat": %b,
 
-                      // Кол-во строк закрытого (затухающего) чата. Range: 8..20. Default: 10.
                       "closedChatLines": %d,
 
-                      // Режим отображения группы фото: false = одна карточка + скролл колёсиком, true = все фото группы в ряд.
                       "groupPhotosRowMode": %b,
 
-                      // Положение выезжающей панели скриншотов: false = справа, true = слева.
                       "screenshotsPanelOnLeft": %b,
 
-                      // Анимация удаления карточки над полем ввода: 0 = полёт вверх и падение, 1 = мелкие осколки, 2 = крупные осколки.
                       "removeAnimMode": %d,
 
-                      // Дополнительные папки со скриншотами, добавленные пользователем.
                       "screenshotFolders": %s,
 
-                      // Индекс последней выбранной папки в панели скриншотов (0 = дефолтная).
                       "lastScreenshotFolderIndex": %d
                     }
                     """.formatted(

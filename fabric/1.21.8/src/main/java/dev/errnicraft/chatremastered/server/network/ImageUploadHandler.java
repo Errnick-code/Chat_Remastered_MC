@@ -127,6 +127,15 @@ public final class ImageUploadHandler {
                 payload.replyToSender(), payload.replyToText(), payload.replyToImageId(),
                 payload.groupId(), payload.groupIndex(), payload.groupCount());
         server.execute(() -> {
+            if (dev.errnicraft.chatremastered.server.groups.GroupNetwork.tryGroupBroadcast(server, senderUuid, (player, g) -> {
+                if (!player.getUUID().equals(senderUuid) && ChatRemasteredState.hasModInstalled(player.getUUID())) {
+                    ServerPlayNetworking.send(player, new dev.errnicraft.chatremastered.network.packet.ImageChatPacket(imageId, sender,
+                            dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupLabelLegacy(g) + " §r" + dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupBodyLegacy(g, caption), width, height,
+                            dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupNick(sender, g),
+                            payload.replyToSender(), payload.replyToText(), payload.replyToImageId(),
+                            payload.groupId(), payload.groupIndex(), payload.groupCount()));
+                }
+            })) return;
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 if (ChatRemasteredState.hasModInstalled(player.getUUID()) && !player.getUUID().equals(senderUuid)) {
                     ServerPlayNetworking.send(player, packet);

@@ -22,4 +22,11 @@ public final class NetworkComponentJson {
         JsonElement element = GSON.fromJson(json, JsonElement.class);
         return ComponentSerialization.CODEC.decode(JsonOps.INSTANCE, element).getOrThrow().getFirst();
     }
+
+    public static String trunc(String s, int max) {
+        if (s == null) {
+            return "";
+        }
+        return s.length() <= max ? s : s.substring(0, Math.max(0, max - 1)) + "…";
+    }
 }

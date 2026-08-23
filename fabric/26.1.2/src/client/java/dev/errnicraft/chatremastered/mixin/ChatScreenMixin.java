@@ -9,6 +9,8 @@ import dev.errnicraft.chatremastered.ImageViewerScreen;
 import dev.errnicraft.chatremastered.PendingCardAnimator;
 import dev.errnicraft.chatremastered.PendingImageState;
 import dev.errnicraft.chatremastered.client.chatscreen.ChatContextMenuRenderer;
+import dev.errnicraft.chatremastered.GroupModeState;
+import dev.errnicraft.chatremastered.network.packet.GroupChatPacket;
 import dev.errnicraft.chatremastered.client.chatscreen.ChatLineLocator;
 import dev.errnicraft.chatremastered.client.chatscreen.PendingCardRenderer;
 import dev.errnicraft.chatremastered.client.chatscreen.ReplyBarRenderer;
@@ -76,6 +78,21 @@ public class ChatScreenMixin {
             Identifier.fromNamespaceAndPath("chat-remastered", "textures/gui/screenshots.png");
     private static final Identifier SCREENSHOTS_ACTIVE_TEX =
             Identifier.fromNamespaceAndPath("chat-remastered", "textures/gui/screenshots_active.png");
+
+    private static final int GRP_BTN_W = 20;
+    private static final int GRP_BTN_H = 20;
+    private static final Identifier GROUP_TEX =
+            Identifier.fromNamespaceAndPath("chat-remastered", "textures/gui/group.png");
+    private static final Identifier GROUP_ACTIVE_TEX =
+            Identifier.fromNamespaceAndPath("chat-remastered", "textures/gui/group_active.png");
+    private static final Identifier GROUP_GLOBAL_TEX =
+            Identifier.fromNamespaceAndPath("chat-remastered", "textures/gui/group_global.png");
+    private static final Identifier GROUP_GLOBAL_HOVER_TEX =
+            Identifier.fromNamespaceAndPath("chat-remastered", "textures/gui/group_global_hover.png");
+    private static final Identifier GROUP_ACTIVE_HOVER_TEX =
+            Identifier.fromNamespaceAndPath("chat-remastered", "textures/gui/group_active_hover.png");
+    private static final Identifier GROUP_LOCKED_TEX =
+            Identifier.fromNamespaceAndPath("chat-remastered", "textures/gui/group_locked.png");
 
     private boolean cr$menuOpen = false;
     private int cr$menuX, cr$menuY;
@@ -274,33 +291,65 @@ public class ChatScreenMixin {
         ChatScreen self = (ChatScreen)(Object)this;
         Minecraft mc = Minecraft.getInstance();
 
-        int inputBarTop = self.height - 12;
-        int camBtnX = self.width - CAM_BTN_W - 2;
-        int camBtnY = inputBarTop - CAM_BTN_H - 4;
+int btnW = CAM_BTN_W;
+        int btnH = CAM_BTN_H;
+        int colR = self.width - btnW - 2;
+        int colL = self.width - btnW * 2 - 4;
+        int rowB = self.height - 12 - btnH - 4;
+        int rowT = rowB - btnH - 2;
 
         boolean canSend = canSendPhoto();
-        boolean hoverCam = mouseX >= camBtnX && mouseX < camBtnX + CAM_BTN_W
-                && mouseY >= camBtnY && mouseY < camBtnY + CAM_BTN_H;
+        boolean hoverCam = mouseX >= colR && mouseX < colR + btnW && mouseY >= rowB && mouseY < rowB + btnH;
+        boolean hoverCfg = mouseX >= colR && mouseX < colR + btnW && mouseY >= rowT && mouseY < rowT + btnH;
+        boolean hoverScr = mouseX >= colL && mouseX < colL + btnW && mouseY >= rowB && mouseY < rowB + btnH;
+        boolean hoverGrp = mouseX >= colL && mouseX < colL + btnW && mouseY >= rowT && mouseY < rowT + btnH;
 
         Identifier camTex = !canSend ? FOLDER_BLOCK_TEX : (hoverCam ? FOLDER_ACTIVE_TEX : FOLDER_TEX);
-        graphics.blit(RenderPipelines.GUI_TEXTURED, camTex, camBtnX, camBtnY, 0f, 0f, CAM_BTN_W, CAM_BTN_H, CAM_BTN_W, CAM_BTN_H);
-
-        int cfgBtnX = self.width - CFG_BTN_W - 2;
-        int cfgBtnY = camBtnY - CFG_BTN_H - 2;
-        boolean hoverCfg = mouseX >= cfgBtnX && mouseX < cfgBtnX + CFG_BTN_W
-                && mouseY >= cfgBtnY && mouseY < cfgBtnY + CFG_BTN_H;
-
         Identifier cfgTex = hoverCfg ? SETTINGS_ACTIVE_TEX : SETTINGS_TEX;
-        graphics.blit(RenderPipelines.GUI_TEXTURED, cfgTex, cfgBtnX, cfgBtnY, 0f, 0f, CFG_BTN_W, CFG_BTN_H, CFG_BTN_W, CFG_BTN_H);
-
-        int scrBtnX = camBtnX - SCR_BTN_W - 2;
-        int scrBtnY = camBtnY;
-        boolean hoverScr = mouseX >= scrBtnX && mouseX < scrBtnX + SCR_BTN_W
-                && mouseY >= scrBtnY && mouseY < scrBtnY + SCR_BTN_H;
-
         Identifier scrTex = hoverScr ? SCREENSHOTS_ACTIVE_TEX : SCREENSHOTS_TEX;
-        graphics.blit(RenderPipelines.GUI_TEXTURED, scrTex, scrBtnX, scrBtnY, 0f, 0f, SCR_BTN_W, SCR_BTN_H, SCR_BTN_W, SCR_BTN_H);
+        Identifier grpTex;
+        if (!GroupModeState.inGroup) {
+            grpTex = GROUP_LOCKED_TEX;
+        } else if (GroupModeState.mode == 1) {
+            grpTex = hoverGrp ? GROUP_ACTIVE_HOVER_TEX : GROUP_ACTIVE_TEX;
+        } else {
+            grpTex = hoverGrp ? GROUP_GLOBAL_HOVER_TEX : GROUP_GLOBAL_TEX;
+        }
 
+        graphics.blit(RenderPipelines.GUI_TEXTURED, grpTex, colL, rowT, 0f, 0f, btnW, btnH, btnW, btnH);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, cfgTex, colR, rowT, 0f, 0f, btnW, btnH, btnW, btnH);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, scrTex, colL, rowB, 0f, 0f, btnW, btnH, btnW, btnH);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, camTex, colR, rowB, 0f, 0f, btnW, btnH, btnW, btnH);
+
+        if (!cr$screenshotsPanel.isOpen()) {
+        java.util.List<Component> cr$tip = null;
+        if (hoverGrp) {
+            cr$tip = new java.util.ArrayList<>();
+            if (!GroupModeState.inGroup) {
+                cr$tip.add(Component.translatable("chat-remastered.btn_group_locked"));
+                cr$tip.add(Component.translatable("chat-remastered.btn_group_locked.desc").withStyle(net.minecraft.ChatFormatting.GRAY));
+            } else if (GroupModeState.mode == 1) {
+                cr$tip.add(Component.translatable("chat-remastered.btn_group_active"));
+                cr$tip.add(Component.translatable("chat-remastered.btn_group_active.desc").withStyle(net.minecraft.ChatFormatting.GRAY));
+            } else {
+                cr$tip.add(Component.translatable("chat-remastered.btn_group_global"));
+                cr$tip.add(Component.translatable("chat-remastered.btn_group_global.desc").withStyle(net.minecraft.ChatFormatting.GRAY));
+            }
+        } else if (hoverCfg) {
+            cr$tip = java.util.List.of(Component.translatable("chat-remastered.btn_settings"));
+        } else if (hoverScr) {
+            cr$tip = java.util.List.of(Component.translatable("chat-remastered.btn_screenshots"));
+        } else if (hoverCam) {
+            cr$tip = new java.util.ArrayList<>();
+            cr$tip.add(Component.translatable("chat-remastered.btn_attach"));
+            if (!canSend) {
+                cr$tip.add(Component.literal(getButtonHint()).withStyle(net.minecraft.ChatFormatting.RED));
+            }
+        }
+        if (cr$tip != null) {
+            graphics.setComponentTooltipForNextFrame(mc.font, cr$tip, mouseX, mouseY);
+        }
+        }
         cr$pendingAnim.tickRemovals();
         java.util.List<PendingImageState.PendingImage> pendingAllRaw = PendingImageState.getAll();
         java.util.List<PendingImageState.PendingImage> pendingAll = new java.util.ArrayList<>();
@@ -322,6 +371,7 @@ public class ChatScreenMixin {
             return;
         }
 
+        int inputBarTop = self.height - 12;
         int rowBottom = inputBarTop - 6 - ReplyBarRenderer.getPendingPreviewAreaHeight(cr$replyBarAnim);
         int rowLeft = 4;
         int rowRight = self.width - 4;
@@ -391,6 +441,7 @@ public class ChatScreenMixin {
                 cr$menuX, cr$menuY, cr$menuComputedW, cr$menuOpenTime,
                 cr$menuLabels, cr$menuIcons, cr$menuColors, cr$menuItemAnim);
     }
+
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void chatremastered$handleKeys(KeyEvent event, CallbackInfoReturnable<Boolean> cir) {
@@ -756,6 +807,28 @@ public class ChatScreenMixin {
             if (cr$replyAddedTime < 0) {
                 cr$clearReply();
             }
+
+            if (GroupModeState.mode == 1 && input != null && !input.getValue().isBlank()
+                    && !input.getValue().startsWith("/")) {
+                String groupText = input.getValue();
+                if (ChatRemasteredConfig.getMuted()) {
+                    net.minecraft.client.Minecraft.getInstance().gui.getChat().addClientSystemMessage(
+                            net.minecraft.network.chat.Component.literal("§c[Chat Remastered] " +
+                                    ChatRemasteredConfig.tr("chat-remastered.muted"))
+                    );
+                    cir.setReturnValue(true);
+                    return;
+                }
+                net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                        dev.errnicraft.chatremastered.network.packet.GroupChatPacket.c2s(groupText)
+                );
+                net.minecraft.client.Minecraft.getInstance().gui.getChat().addRecentChat(groupText);
+                input.setValue("");
+                cr$resetTagSuggestions();
+                cr$clearReply();
+                cir.setReturnValue(true);
+                return;
+            }
             return;
         }
         if (!pending.isLoaded()) { cir.setReturnValue(true); return; }
@@ -923,14 +996,12 @@ public class ChatScreenMixin {
             return;
         }
 
-        int inputBarTop = self.height - 12;
-        int camBtnX = self.width - CAM_BTN_W - 2;
-        int camBtnY = inputBarTop - CAM_BTN_H - 4;
-        int cfgBtnX = self.width - CFG_BTN_W - 2;
-        int cfgBtnY = camBtnY - CFG_BTN_H - 2;
-        int scrBtnX = camBtnX - SCR_BTN_W - 2;
-        int scrBtnY = camBtnY;
-
+int btnW2 = CAM_BTN_W;
+        int btnH2 = CAM_BTN_H;
+        int colR = self.width - btnW2 - 2;
+        int colL = self.width - btnW2 * 2 - 4;
+        int rowB = self.height - 12 - btnH2 - 4;
+        int rowT = rowB - btnH2 - 2;
         if (!isRightClick && cr$replyAddedTime >= 0) {
             int[] replyBarBounds = ReplyBarRenderer.getReplyBarBounds(mc, self, cr$replyBarAnim);
             if (replyBarBounds != null) {
@@ -950,21 +1021,38 @@ public class ChatScreenMixin {
             }
         }
 
-        if (mx >= cfgBtnX && mx < cfgBtnX + CFG_BTN_W && my >= cfgBtnY && my < cfgBtnY + CFG_BTN_H) {
+        if (!isRightClick && mx >= colL && mx < colL + btnW2 && my >= rowT && my < rowT + btnH2) {
+            mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+            if (!GroupModeState.inGroup) {
+                if (mc.player != null) mc.player.sendSystemMessage(
+                        net.minecraft.network.chat.Component.literal("§c[Chat Remastered] " +
+                                ChatRemasteredConfig.tr("chatremastered.group.send_not_in_group")));
+                cir.setReturnValue(true);
+                return;
+            }
+            GroupModeState.mode = GroupModeState.mode == 1 ? 0 : 1;
+            GroupModeState.save();
+            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                    new dev.errnicraft.chatremastered.network.packet.GroupModePacket(GroupModeState.mode == 1));
+            cir.setReturnValue(true);
+            return;
+        }
+
+        if (mx >= colR && mx < colR + CFG_BTN_W && my >= rowT && my < rowT + CFG_BTN_H) {
             mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
             mc.setScreen(ChatRemasteredConfigScreen.build(self));
             cir.setReturnValue(true);
             return;
         }
 
-        if (mx >= scrBtnX && mx < scrBtnX + SCR_BTN_W && my >= scrBtnY && my < scrBtnY + SCR_BTN_H) {
+        if (mx >= colL && mx < colL + SCR_BTN_W && my >= rowB && my < rowB + SCR_BTN_H) {
             mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
             cr$screenshotsPanel.toggle();
             cir.setReturnValue(true);
             return;
         }
 
-        if (mx >= camBtnX && mx < camBtnX + CAM_BTN_W && my >= camBtnY && my < camBtnY + CAM_BTN_H) {
+        if (mx >= colR && mx < colR + CAM_BTN_W && my >= rowB && my < rowB + CAM_BTN_H) {
             mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
             if (!canSendPhoto()) { ChatRemasteredClient.canSendPhoto(mc); cir.setReturnValue(true); return; }
             openFileDialog();
@@ -980,7 +1068,8 @@ public class ChatScreenMixin {
             }
         }
         if (!pendingAll.isEmpty()) {
-            int rowBottom = inputBarTop - 6 - ReplyBarRenderer.getPendingPreviewAreaHeight(cr$replyBarAnim);
+        int inputBarTop = self.height - 12;
+        int rowBottom = inputBarTop - 6 - ReplyBarRenderer.getPendingPreviewAreaHeight(cr$replyBarAnim);
             int cardX = 4 - cr$pendingStripScrollX;
             boolean removalInProgress = !cr$pendingAnim.getActiveRemovals(self.height).isEmpty();
             for (int i = 0; i < pendingAll.size(); i++) {

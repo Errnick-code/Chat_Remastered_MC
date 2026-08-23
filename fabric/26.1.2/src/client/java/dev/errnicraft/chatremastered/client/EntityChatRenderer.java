@@ -18,17 +18,52 @@ public final class EntityChatRenderer {
     private EntityChatRenderer() {
     }
 
+    private static net.minecraft.network.chat.Style resolveBracketStyle(Component senderComp) {
+        var rootStyle = senderComp.getStyle();
+        if (rootStyle.getColor() != null) {
+            return rootStyle;
+        }
+        for (Component sib : senderComp.getSiblings()) {
+            if (sib.getStyle().getColor() != null) {
+                return sib.getStyle();
+            }
+        }
+        return rootStyle;
+    }
+
     public static void addItemToChat(Minecraft mc, String sender, Component senderComponent,
                                       String itemNamespace, String itemPath, String itemNbt, String caption) {
+        addItemToChat(mc, sender, senderComponent, itemNamespace, itemPath, itemNbt, caption, "", 0);
+    }
+
+    public static void addItemToChat(Minecraft mc, String sender, Component senderComponent,
+                                      String itemNamespace, String itemPath, String itemNbt, String caption,
+                                      String groupLabel) {
+        addItemToChat(mc, sender, senderComponent, itemNamespace, itemPath, itemNbt, caption, groupLabel, 0);
+    }
+
+    public static void addItemToChat(Minecraft mc, String sender, Component senderComponent,
+                                      String itemNamespace, String itemPath, String itemNbt, String caption,
+                                      String groupLabel, int bodyRgb) {
         Component senderComp = (senderComponent != null && !senderComponent.getString().isEmpty())
                 ? senderComponent : Component.literal(sender);
 
         MutableComponent msgText = MutableComponent.create(PlainTextContents.EMPTY);
-        msgText.append(Component.literal("<"));
+        var bracketStyle = resolveBracketStyle(senderComp);
+        if (groupLabel != null && !groupLabel.isEmpty()) {
+            msgText.append(dev.errnicraft.chatremastered.client.NickFormatting.parseLegacyNick(Component.literal(groupLabel)));
+            msgText.append(Component.literal(" "));
+        }
+        msgText.append(Component.literal("<").withStyle(bracketStyle));
         msgText.append(senderComp);
-        msgText.append(Component.literal(">"));
+        msgText.append(Component.literal(">").withStyle(bracketStyle));
         if (caption != null && !caption.isEmpty()) {
-            msgText.append(Component.literal(" " + caption));
+            if (bodyRgb != 0) {
+                msgText.append(Component.literal(" " + caption)
+                        .withStyle(s -> s.withColor(net.minecraft.network.chat.TextColor.fromRgb(bodyRgb))));
+            } else {
+                msgText.append(Component.literal(" " + caption));
+            }
         }
         msgText.append(Component.literal(" §7[\uD83D\uDCE6]"));
         for (int i = 0; i < ITEM_LINES; i++) {
@@ -42,14 +77,25 @@ public final class EntityChatRenderer {
     }
 
     public static void addEntityToChat(Minecraft mc, String sender, Component senderComponent,
-                                        String targetPlayerName, String behavior, String caption) {
+                                      String targetPlayerName, String behavior, String caption) {
+        addEntityToChat(mc, sender, senderComponent, targetPlayerName, behavior, caption, "", 0);
+    }
+
+    public static void addEntityToChat(Minecraft mc, String sender, Component senderComponent,
+                                      String targetPlayerName, String behavior, String caption,
+                                      String groupLabel, int bodyRgb) {
         Component senderComp = (senderComponent != null && !senderComponent.getString().isEmpty())
                 ? senderComponent : Component.literal(sender);
 
         MutableComponent msgText = MutableComponent.create(PlainTextContents.EMPTY);
-        msgText.append(Component.literal("<"));
+        var bracketStyle = resolveBracketStyle(senderComp);
+        if (groupLabel != null && !groupLabel.isEmpty()) {
+            msgText.append(NickFormatting.parseLegacyNick(Component.literal(groupLabel)));
+            msgText.append(Component.literal(" "));
+        }
+        msgText.append(Component.literal("<").withStyle(bracketStyle));
         msgText.append(senderComp);
-        msgText.append(Component.literal(">"));
+        msgText.append(Component.literal(">").withStyle(bracketStyle));
         if (caption != null && !caption.isEmpty()) {
             msgText.append(Component.literal(" " + caption));
         }
@@ -67,13 +113,25 @@ public final class EntityChatRenderer {
     public static void addEntityMobToChat(Minecraft mc, String sender, Component senderComponent,
                                            String entityNamespace, String entityPath, String entityNbt,
                                            String behavior, int size, int offsetX, int offsetY, String caption) {
+        addEntityMobToChat(mc, sender, senderComponent, entityNamespace, entityPath, entityNbt, behavior, size, offsetX, offsetY, caption, "", 0);
+    }
+
+    public static void addEntityMobToChat(Minecraft mc, String sender, Component senderComponent,
+                                           String entityNamespace, String entityPath, String entityNbt,
+                                           String behavior, int size, int offsetX, int offsetY, String caption,
+                                           String groupLabel, int bodyRgb) {
         Component senderComp = (senderComponent != null && !senderComponent.getString().isEmpty())
                 ? senderComponent : Component.literal(sender);
 
         MutableComponent msgText = MutableComponent.create(PlainTextContents.EMPTY);
-        msgText.append(Component.literal("<"));
+        var bracketStyle = resolveBracketStyle(senderComp);
+        if (groupLabel != null && !groupLabel.isEmpty()) {
+            msgText.append(NickFormatting.parseLegacyNick(Component.literal(groupLabel)));
+            msgText.append(Component.literal(" "));
+        }
+        msgText.append(Component.literal("<").withStyle(bracketStyle));
         msgText.append(senderComp);
-        msgText.append(Component.literal(">"));
+        msgText.append(Component.literal(">").withStyle(bracketStyle));
         if (caption != null && !caption.isEmpty()) {
             msgText.append(Component.literal(" " + caption));
         }
@@ -90,13 +148,24 @@ public final class EntityChatRenderer {
 
     public static void addBlockToChat(Minecraft mc, String sender, Component senderComponent,
                                       String blockNamespace, String blockPath, String blockState, String caption) {
+        addBlockToChat(mc, sender, senderComponent, blockNamespace, blockPath, blockState, caption, "", 0);
+    }
+
+    public static void addBlockToChat(Minecraft mc, String sender, Component senderComponent,
+                                      String blockNamespace, String blockPath, String blockState, String caption,
+                                      String groupLabel, int bodyRgb) {
         Component senderComp = (senderComponent != null && !senderComponent.getString().isEmpty())
                 ? senderComponent : Component.literal(sender);
 
         MutableComponent msgText = MutableComponent.create(PlainTextContents.EMPTY);
-        msgText.append(Component.literal("<"));
+        var bracketStyle = resolveBracketStyle(senderComp);
+        if (groupLabel != null && !groupLabel.isEmpty()) {
+            msgText.append(NickFormatting.parseLegacyNick(Component.literal(groupLabel)));
+            msgText.append(Component.literal(" "));
+        }
+        msgText.append(Component.literal("<").withStyle(bracketStyle));
         msgText.append(senderComp);
-        msgText.append(Component.literal(">"));
+        msgText.append(Component.literal(">").withStyle(bracketStyle));
         if (caption != null && !caption.isEmpty()) {
             msgText.append(Component.literal(" " + caption));
         }
@@ -111,3 +180,5 @@ public final class EntityChatRenderer {
                 caption != null ? caption : "", addedTime);
     }
 }
+
+

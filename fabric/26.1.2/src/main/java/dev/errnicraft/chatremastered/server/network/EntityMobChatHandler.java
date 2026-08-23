@@ -3,6 +3,7 @@ package dev.errnicraft.chatremastered.server.network;
 import dev.errnicraft.chatremastered.network.packet.EntityMobChatPacket;
 import dev.errnicraft.chatremastered.network.packet.PhotoDeniedPacket;
 import dev.errnicraft.chatremastered.server.ChatRemasteredState;
+import dev.errnicraft.chatremastered.server.groups.GroupNetwork;
 import dev.errnicraft.chatremastered.server.moderation.ModerationActions;
 import dev.errnicraft.chatremastered.server.tgbridge.TgBridgeCompat;
 import dev.errnicraft.chatremastered.text.LegacyNickParser;
@@ -41,6 +42,11 @@ public final class EntityMobChatHandler {
             int offsetX = Math.max(-4000, Math.min(payload.offsetX(), 4000));
             int offsetY = Math.max(-4000, Math.min(payload.offsetY(), 4000));
 
+            if (!GroupNetwork.tryGroupBroadcast(context.server(), player, (p, g) -> {
+                ServerPlayNetworking.send(p, new EntityMobChatPacket(
+                        senderName, GroupNetwork.groupNick(senderName, g), entityNamespace, entityPath, entityNbt, behavior, size, offsetX, offsetY, caption,
+                        GroupNetwork.groupLabelLegacy(g), GroupNetwork.groupBodyRgb(g)));
+            })) {
             EntityMobChatPacket outPacket = new EntityMobChatPacket(
                     senderName, senderComp, entityNamespace, entityPath, entityNbt, behavior,
                     size, offsetX, offsetY, caption);
@@ -49,6 +55,7 @@ public final class EntityMobChatHandler {
                 if (p.getChatVisibility() == ChatVisiblity.FULL && ChatRemasteredState.hasModInstalled(p.getUUID())) {
                     ServerPlayNetworking.send(p, outPacket);
                 }
+            }
             }
 
             String fallbackLabel = "[entity:" + entityNamespace + ":" + entityPath + "]";

@@ -16,6 +16,13 @@ base {
 loom {
     splitEnvironmentSourceSets()
 
+    runs {
+        client {
+            programArgs "--username", "ScrBot"
+            vmArg "-Dchatremastered.dev=true"
+        }
+    }
+
     mods {
         "chat-remastered" {
             sourceSet sourceSets.main
@@ -76,8 +83,13 @@ java {
 
 jar {
     archiveVersion = "${rootProject.mod_version}+${mcVersion}"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     from("${rootDir}/LICENSE") {
         rename { "${it}_${project.base.archivesName}" }
     }
+}
+
+tasks.matching { it.name == 'sourcesJar' }.configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

@@ -3,6 +3,7 @@ package dev.errnicraft.chatremastered.server.network;
 import dev.errnicraft.chatremastered.network.packet.ItemChatPacket;
 import dev.errnicraft.chatremastered.network.packet.PhotoDeniedPacket;
 import dev.errnicraft.chatremastered.server.ChatRemasteredState;
+import dev.errnicraft.chatremastered.server.groups.GroupNetwork;
 import dev.errnicraft.chatremastered.server.moderation.ModerationActions;
 import dev.errnicraft.chatremastered.server.tgbridge.TgBridgeCompat;
 import dev.errnicraft.chatremastered.text.LegacyNickParser;
@@ -39,9 +40,20 @@ public final class ItemChatHandler {
             ItemChatPacket outPacket = new ItemChatPacket(
                     senderName, senderComp, itemNamespace, itemPath, itemNbt, caption);
 
-            for (ServerPlayer p : context.server().getPlayerList().getPlayers()) {
-                if (p.getChatVisibility() == ChatVisiblity.FULL && ChatRemasteredState.hasModInstalled(p.getUUID())) {
-                    ServerPlayNetworking.send(p, outPacket);
+            if (!GroupNetwork.tryGroupBroadcast(context.server(), player, (p, g) -> {
+                ItemChatPacket groupPacket = new ItemChatPacket(
+                        senderName,
+                        GroupNetwork.groupNick(senderName, g),
+                        itemNamespace, itemPath, itemNbt,
+                        caption,
+                        GroupNetwork.groupLabelLegacy(g),
+                        GroupNetwork.groupBodyRgb(g));
+                ServerPlayNetworking.send(p, groupPacket);
+            })) {
+                for (ServerPlayer p : context.server().getPlayerList().getPlayers()) {
+                    if (p.getChatVisibility() == ChatVisiblity.FULL && ChatRemasteredState.hasModInstalled(p.getUUID())) {
+                        ServerPlayNetworking.send(p, outPacket);
+                    }
                 }
             }
 

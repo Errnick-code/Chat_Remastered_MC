@@ -437,7 +437,9 @@ public final class ImageUploadFlow {
 
             ChatRemasteredStore.storeOriginalFile(imageId, pending.getFile());
             ImageCache.storeFullData(imageId, fullBytes);
-            if (i == 0) {
+            boolean groupChannelActive = dev.errnicraft.chatremastered.GroupModeState.mode == 1
+                    && dev.errnicraft.chatremastered.GroupModeState.inGroup;
+            if (i == 0 && !groupChannelActive) {
                 ChatRemasteredStore.markSuppressPhotoMessage(sender, itemCaption.isEmpty() ? null : itemCaption);
                 ChatMessageRenderer.addImageToChat(mc, imageId, sender, itemCaption, sendW, sendH, senderComp, isReply, groupId);
                 if (isReply) {

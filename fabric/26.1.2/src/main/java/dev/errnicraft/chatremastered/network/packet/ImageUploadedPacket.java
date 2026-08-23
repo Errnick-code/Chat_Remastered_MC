@@ -2,6 +2,7 @@ package dev.errnicraft.chatremastered.network.packet;
 
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.network.FriendlyByteBuf;
+import dev.errnicraft.chatremastered.network.NetworkComponentJson;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
@@ -30,8 +31,8 @@ public record ImageUploadedPacket(
                 buf.writeUtf(pkt.caption);
                 buf.writeInt(pkt.width);
                 buf.writeInt(pkt.height);
-                buf.writeUtf(pkt.replyToSender, 64);
-                buf.writeUtf(pkt.replyToText, 256);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.replyToSender, 64), 64);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.replyToText, 256), 256);
                 buf.writeUtf(pkt.replyToImageId, 64);
                 buf.writeUtf(pkt.groupId, 40);
                 buf.writeInt(pkt.groupIndex);

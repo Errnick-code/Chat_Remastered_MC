@@ -41,6 +41,13 @@ public final class EntityMobChatHandler {
             int offsetX = Math.max(-4000, Math.min(payload.offsetX(), 4000));
             int offsetY = Math.max(-4000, Math.min(payload.offsetY(), 4000));
 
+            if (!dev.errnicraft.chatremastered.server.groups.GroupNetwork.tryGroupBroadcast(context.server(), player, (p, g) -> {
+                ServerPlayNetworking.send(p, new dev.errnicraft.chatremastered.network.packet.EntityMobChatPacket(
+                        senderName,
+                        dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupNick(senderName, g),
+                        entityNamespace, entityPath, entityNbt, behavior, size, offsetX, offsetY,
+                        dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupLabelLegacy(g) + " §r" + dev.errnicraft.chatremastered.server.groups.GroupNetwork.groupBodyLegacy(g, caption)));
+            })) return;
             EntityMobChatPacket outPacket = new EntityMobChatPacket(
                     senderName, senderComp, entityNamespace, entityPath, entityNbt, behavior,
                     size, offsetX, offsetY, caption);

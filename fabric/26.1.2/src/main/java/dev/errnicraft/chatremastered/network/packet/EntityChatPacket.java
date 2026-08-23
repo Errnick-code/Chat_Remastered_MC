@@ -13,7 +13,9 @@ public record EntityChatPacket(
         Component senderComponent,
         String targetPlayerName,
         String behavior,
-        String caption
+        String caption,
+        String groupLabel,
+        int bodyRgb
 ) implements CustomPacketPayload {
 
     public static final Identifier ID = Identifier.fromNamespaceAndPath("chat-remastered", "entity_chat");
@@ -25,19 +27,28 @@ public record EntityChatPacket(
                 buf.writeUtf(NetworkComponentJson.toJson(pkt.senderComponent));
                 buf.writeUtf(pkt.targetPlayerName, 16);
                 buf.writeUtf(pkt.behavior, 16);
-                buf.writeUtf(pkt.caption, 256);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.caption, 256), 256);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.groupLabel, 48), 48);
+                buf.writeInt(pkt.bodyRgb);
             },
             buf -> new EntityChatPacket(
                     buf.readUtf(64),
                     NetworkComponentJson.fromJson(buf.readUtf()),
                     buf.readUtf(16),
                     buf.readUtf(16),
-                    buf.readUtf(256)
+                    buf.readUtf(256),
+                    buf.readUtf(48),
+                    buf.readInt()
             )
     );
 
+    public EntityChatPacket(String sender, Component senderComponent, String targetPlayerName,
+                            String behavior, String caption) {
+        this(sender, senderComponent, targetPlayerName, behavior, caption, "", 0);
+    }
+
     public EntityChatPacket(String targetPlayerName, String behavior, String caption) {
-        this("", Component.literal(""), targetPlayerName, behavior, caption);
+        this("", Component.literal(""), targetPlayerName, behavior, caption, "", 0);
     }
 
     @Override
