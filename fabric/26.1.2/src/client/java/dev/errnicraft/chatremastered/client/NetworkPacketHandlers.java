@@ -140,7 +140,14 @@ public final class NetworkPacketHandlers {
                     if (res.equals("360") || res.equals("480") || res.equals("720") || res.equals("HD") || res.equals("2K")) {
                         ChatRemasteredConfig.setResolution(res);
                     }
-                    ChatRemasteredConfig.setImagePort(payload.imagePort());
+                    ChatRemasteredConfig.setImagePort(payload.imagePublicPort());
+                    String imageHost = payload.imageHost();
+                    if (imageHost != null && !imageHost.isBlank()) {
+                        ChatRemasteredConfig.setServerHost(imageHost.trim());
+                        System.out.println("[Chat Remastered] Image endpoint from server config: " + ChatRemasteredConfig.getServerHost() + ":" + ChatRemasteredConfig.getImagePort());
+                    } else {
+                        System.out.println("[Chat Remastered] imageHost not configured; using legacy resolved host: " + ChatRemasteredConfig.getServerHost());
+                    }
                     ChatRemasteredConfig.setUploadToken(payload.uploadToken());
                     ChatRemasteredConfig.setCooldownSeconds(Math.max(payload.photoCooldownSeconds(), 0));
                     ChatRemasteredConfig.setGifEnabled(payload.gifEnabled());
@@ -169,7 +176,7 @@ public final class NetworkPacketHandlers {
                         "chat-remastered.connected", (Object) ("§7" + ChatRemasteredConfig.getResolution() + "§a"))));
             } else {
                 mc.gui.getChat().addClientSystemMessage(Component.literal("§8[Chat Remastered] §c✘ " + ChatRemasteredConfig.tr(
-                        "chat-remastered.no_tcp_connect", (Object) String.valueOf(ChatRemasteredConfig.getImagePort()))));
+                        "chat-remastered.no_tcp_connect", (Object) (ChatRemasteredConfig.getServerHost() + ":" + ChatRemasteredConfig.getImagePort()))));
             }
         });
     }

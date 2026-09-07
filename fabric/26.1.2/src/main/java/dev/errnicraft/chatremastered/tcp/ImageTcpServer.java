@@ -24,10 +24,10 @@ public final class ImageTcpServer {
         return t;
     });
 
-    public static void startIfNeeded(int port) {
+    public static boolean startIfNeeded(int port) {
         ServerSocket existing = serverSocket;
         if (existing != null && !existing.isClosed()) {
-            return;
+            return true;
         }
         try {
             ServerSocket ss = new ServerSocket(port);
@@ -54,8 +54,10 @@ public final class ImageTcpServer {
                     }
                 }
             });
+            return true;
         } catch (Exception e) {
             System.out.println("[Chat Remastered] Failed to start TCP server on port " + port + ": " + e.getMessage());
+            return false;
         }
     }
 

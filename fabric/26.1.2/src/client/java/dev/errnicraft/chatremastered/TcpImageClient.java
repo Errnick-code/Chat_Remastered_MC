@@ -27,8 +27,11 @@ public final class TcpImageClient {
     }
 
     private static Socket connect(int timeout) throws Exception {
+        String host = ChatRemasteredConfig.getServerHost();
+        int port = ChatRemasteredConfig.getImagePort();
+        System.out.println("[Chat Remastered] Connecting to image server " + host + ":" + port);
         Socket s = new Socket();
-        s.connect(new InetSocketAddress(ChatRemasteredConfig.getServerHost(), ChatRemasteredConfig.getImagePort()), timeout);
+        s.connect(new InetSocketAddress(host, port), timeout);
         s.setSoTimeout(timeout);
         return s;
     }

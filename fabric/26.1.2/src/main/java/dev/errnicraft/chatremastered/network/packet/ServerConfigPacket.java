@@ -8,12 +8,13 @@ import net.minecraft.resources.Identifier;
 
 public record ServerConfigPacket(
         String resolution,
-        int imagePort,
+        int imagePublicPort,
         String uploadToken,
         int photoCooldownSeconds,
         boolean gifEnabled,
         int gifMaxDim,
-        int maxPhotosPerMessage
+        int maxPhotosPerMessage,
+        String imageHost
 ) implements CustomPacketPayload {
 
     public static final Identifier ID = Identifier.fromNamespaceAndPath("chat-remastered", "server_config");
@@ -22,12 +23,15 @@ public record ServerConfigPacket(
     public static final StreamCodec<FriendlyByteBuf, ServerConfigPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {
                 buf.writeUtf(pkt.resolution, 8);
-                buf.writeInt(pkt.imagePort);
+                buf.writeInt(pkt.imagePublicPort);
                 buf.writeUtf(pkt.uploadToken, 64);
                 buf.writeInt(pkt.photoCooldownSeconds);
                 buf.writeBoolean(pkt.gifEnabled);
                 buf.writeInt(pkt.gifMaxDim);
                 buf.writeInt(pkt.maxPhotosPerMessage);
+                // Explicit public/reachable host for the image TCP service.
+                // Empty means the client keeps its legacy auto-detected host.
+                buf.writeUtf(pkt.imageHost, 255);
             },
             buf -> new ServerConfigPacket(
                     buf.readUtf(8),
@@ -36,7 +40,8 @@ public record ServerConfigPacket(
                     buf.readInt(),
                     buf.readBoolean(),
                     buf.readInt(),
-                    buf.readInt()
+                    buf.readInt(),
+                    buf.readableBytes() > 0 ? buf.readUtf(255) : ""
             )
     );
 

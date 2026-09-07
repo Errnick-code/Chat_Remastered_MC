@@ -54,8 +54,12 @@ public final class ChatRemasteredLifecycle {
                 ImageTcpServer.initCacheDir(server.getServerDirectory().toFile());
             }
             ImageTcpServer.setMaxUploadBytes(8L * 1024 * 1024);
-            ImageTcpServer.startIfNeeded(config.imagePort());
-            System.out.println("[Chat Remastered] TCP server started at boot on port " + config.imagePort());
+            boolean tcpStarted = ImageTcpServer.startIfNeeded(config.imagePort());
+            if (tcpStarted) {
+                System.out.println("[Chat Remastered] TCP server ready on port " + config.imagePort());
+            } else {
+                System.out.println("[Chat Remastered] TCP server FAILED to start on port " + config.imagePort() + ". Check whether the port is already in use and whether the server has permission to bind it.");
+            }
 
             TgBridgeCompat.init(server);
         });

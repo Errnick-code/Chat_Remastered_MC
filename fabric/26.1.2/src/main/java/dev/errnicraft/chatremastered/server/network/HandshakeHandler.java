@@ -48,11 +48,16 @@ public final class HandshakeHandler {
             }
 
             ServerConfig config = ServerConfigLoader.loadOrCreate(server.getServerDirectory());
+            if (config.imageHost().isBlank()) {
+                System.out.println("[Chat Remastered] imageHost is empty; clients will use the legacy auto-detected Minecraft host on public port " + config.imagePublicPort() + ".");
+            } else {
+                System.out.println("[Chat Remastered] Image endpoint configured as " + config.imageHost() + ":" + config.imagePublicPort() + " (local TCP bind " + config.imagePort() + ").");
+            }
             ServerPlayNetworking.send(
                     player,
-                    new ServerConfigPacket(config.resolution(), config.imagePort(), uploadToken,
+                    new ServerConfigPacket(config.resolution(), config.imagePublicPort(), uploadToken,
                             config.photoCooldownSeconds(), config.gifEnabled(), config.gifMaxDim(),
-                            config.maxPhotosPerMessage())
+                            config.maxPhotosPerMessage(), config.imageHost())
             );
 
             if (ChatRemasteredState.isPhotoBanned(player.getUUID())) {
