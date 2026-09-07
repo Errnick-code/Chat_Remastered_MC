@@ -3,6 +3,8 @@ package dev.errnicraft.chatremastered.server.config;
 public record ServerConfig(
         String resolution,
         int imagePort,
+        String imageHost,
+        int imagePublicPort,
         int photoCooldownSeconds,
         boolean gifEnabled,
         int gifMaxDim,
@@ -12,6 +14,8 @@ public record ServerConfig(
     public static ServerConfig defaults() {
         return new ServerConfig(
                 "720",
+                5050,
+                "",
                 5050,
                 5,
                 true,

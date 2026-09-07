@@ -72,8 +72,9 @@ A complete rewrite of the Minecraft chat experience. Send media, reply to messag
 
 **Server-Side (Required for sharing)**
 1. Place the mod and its dependencies into the server's mods folder
-2. Open TCP port `5050` (or change it in config) to allow media transfer
-3. Configure settings via `config/chat-remastered-server.json`
+2. Open the local TCP port configured by `imagePort` (default: `5050`) to allow media transfer
+3. When Minecraft is behind a proxy, FRP, NAT or port-forwarding setup, set `imageHost` and `imagePublicPort` in `config/chat-remastered-server.json5` to the public/reachable endpoint that clients should use. For example, `imageHost` can be `play.example.com` and `imagePublicPort` can be `17265`. Do not include the port in `imageHost`.
+4. Configure settings via `config/chat-remastered-server.json5`
 
 > ⚠️ Without the server-side installation, players will not be able to send or view media.
 
@@ -95,7 +96,9 @@ Chat Remastered automatically detects these mods/plugins if installed and hooks 
 | Option | Default | Description |
 |---|---|---|
 | `resolution` | `720` | Max media resolution (360 / 480 / 720 / HD / 2K) |
-| `imagePort` | `5050` | TCP transfer port |
+| `imagePort` | `5050` | Local TCP port used by the image transfer service |
+| `imageHost` | *(empty)* | Public/reachable host for the image TCP service. Do not include the port. Empty keeps legacy auto-detection. |
+| `imagePublicPort` | `5050` | Public TCP port that clients use to connect to the image service |
 | `photoCooldownSeconds` | `5` | Cooldown between uploads per player (seconds) |
 | `gifEnabled` | `true` | Allow players to send animated GIFs |
 | `gifMaxDim` | `480` | Max GIF resolution players can upload (240–1920) |
