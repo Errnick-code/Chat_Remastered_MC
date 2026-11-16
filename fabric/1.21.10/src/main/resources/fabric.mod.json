@@ -15,14 +15,16 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "dev.errnicraft.chatremastered.ChatRemasteredMod"
+      "dev.errnick.chatremastered.ChatRemasteredMod",
+      "dev.errnick.chatremastered.Errnick"
     ],
     "client": [
-      "dev.errnicraft.chatremastered.ChatRemasteredClient"
+      "dev.errnick.chatremastered.ChatRemasteredClient"
     ]
   },
   "mixins": [
-    "chat-remastered.client.mixins.json"
+    "chat-remastered.client.mixins.json",
+    "chat-remastered.features.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.18.0",

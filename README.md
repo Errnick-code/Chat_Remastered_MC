@@ -195,17 +195,3 @@ The mod doesn't rely on external URLs. If something goes wrong during transmissi
 Not currently, as the server console only handles text data. Advanced logging features for administrators are planned for future updates.
 
 ---
-
-## 📅 Road Map
-
-**Supported Versions:** Fabric 1.21.11 ✔
-
-| Platform / Feature | Status |
-|---|---|
-| Fabric (26.x+) | 🔜 In progress |
-| NeoForge 1.21.11 - 26.x | 🔜 In progress |
-| Fabric legacy (1.20.x) | 📅 Planned |
-| Forge / NeoForge | 📅 Planned |
-| Quilt | 📅 Planned |
-| Paper / Spigot / Purpur (Server plugin) | ⚡ Planned |
-| Video support | ❌ Cancelled (highly unlikely due to heavy Minecraft performance impact) |

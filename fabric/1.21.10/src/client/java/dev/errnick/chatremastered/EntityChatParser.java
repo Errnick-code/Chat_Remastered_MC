@@ -1,0 +1,240 @@
+package dev.errnick.chatremastered;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public final class EntityChatParser {
+
+    private static final Pattern PLAYER_PATTERN = Pattern.compile(
+            "^<chat_remastered:player:([A-Za-z0-9_]{1,16}):(tocursor|rotate)>\\s?(.*)$",
+            Pattern.DOTALL
+    );
+
+    private static final Pattern SHORT_PLAYER_PATTERN = Pattern.compile(
+            "^<player:([A-Za-z0-9_]{1,16})>\\s?(.*)$",
+            Pattern.DOTALL
+    );
+
+    private static final Pattern UUID_PATTERN = Pattern.compile(
+            "^<([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})>\\s?(.*)$",
+            Pattern.DOTALL
+    );
+
+    private static final Pattern ENTITY_PATTERN = Pattern.compile(
+            "^<chat_remastered:entity:([a-z0-9_.-]+):([a-z0-9_./-]+)(\\{[^>]*})?:(tocursor|rotate)"
+                    + "(?::(-?[0-9]{1,4}))?(?::(-?[0-9]{1,4}))?(?::(-?[0-9]+(?:\\.[0-9]+)?))?>\\s?(.*)$",
+            Pattern.DOTALL
+    );
+
+    private static final Pattern ITEM_PATTERN = Pattern.compile(
+            "^<chat_remastered:item:([a-z0-9_.-]+):([a-z0-9_./-]+)(\\{[^>]*})?>\\s?(.*)$",
+            Pattern.DOTALL
+    );
+
+    private static final Pattern HAND_ITEM_PATTERN = Pattern.compile(
+            "^<item>\\s?(.*)$",
+            Pattern.DOTALL
+    );
+
+    private static final Pattern BLOCK_PATTERN = Pattern.compile(
+            "^<chat_remastered:block:([a-z0-9_.-]+):([a-z0-9_./-]+)(\\{[^>]*})?>\\s?(.*)$",
+            Pattern.DOTALL
+    );
+
+    private static final Pattern LOOK_BLOCK_PATTERN = Pattern.compile(
+            "^<block>\\s?(.*)$",
+            Pattern.DOTALL
+    );
+
+    private static final Pattern LOOK_ENTITY_PATTERN = Pattern.compile(
+            "^<entity>\\s?(.*)$",
+            Pattern.DOTALL
+    );
+
+    private EntityChatParser() {
+    }
+
+    public record ParsedCommand(String targetPlayerName, String behavior, String caption) {
+    }
+
+    public record ParsedEntityCommand(String entityNamespace, String entityPath, CompoundTag entityNbt,
+                                       String behavior, Integer offsetX, Integer offsetY, Float size,
+                                       String caption) {
+        public ParsedEntityCommand {
+            if (entityNbt == null) {
+                entityNbt = new CompoundTag();
+            }
+        }
+    }
+
+    public record ParsedItemCommand(String itemNamespace, String itemPath, CompoundTag itemNbt, String caption) {
+        public ParsedItemCommand {
+            if (itemNbt == null) {
+                itemNbt = new CompoundTag();
+            }
+        }
+    }
+
+    public record ParsedHandItemCommand(String caption) {
+    }
+
+    public record ParsedBlockCommand(String blockNamespace, String blockPath, String blockState, String caption) {
+        public ParsedBlockCommand {
+            if (blockState != null && blockState.length() > 512) {
+                blockState = blockState.substring(0, 512);
+            }
+        }
+    }
+
+    public record ParsedLookBlockCommand(String caption) {
+    }
+
+    public record ParsedLookEntityCommand(String caption) {
+    }
+
+    public record ParsedShortPlayerCommand(String targetPlayerName, String caption) {
+    }
+
+    public record ParsedUuidCommand(String uuid, String caption) {
+    }
+
+    public static ParsedCommand parse(String rawInput) {
+        if (rawInput == null) {
+            return null;
+        }
+        Matcher m = PLAYER_PATTERN.matcher(rawInput);
+        if (!m.matches()) {
+            return null;
+        }
+        String targetPlayerName = m.group(1);
+        String behavior = m.group(2);
+        String caption = m.group(3) != null ? m.group(3).trim() : "";
+        return new ParsedCommand(targetPlayerName, behavior, caption);
+    }
+
+    public static ParsedEntityCommand parseEntity(String rawInput) {
+        if (rawInput == null) {
+            return null;
+        }
+        Matcher m = ENTITY_PATTERN.matcher(rawInput);
+        if (!m.matches()) {
+            return null;
+        }
+        String entityNamespace = m.group(1);
+        String entityPath = m.group(2);
+        CompoundTag entityNbt = parseNbt(m.group(3));
+        String behavior = m.group(4);
+        Integer offsetX = m.group(5) != null ? Integer.parseInt(m.group(5)) : null;
+        Integer offsetY = m.group(6) != null ? Integer.parseInt(m.group(6)) : null;
+        Float size = m.group(7) != null ? Float.parseFloat(m.group(7)) : null;
+        String caption = m.group(8) != null ? m.group(8).trim() : "";
+        return new ParsedEntityCommand(entityNamespace, entityPath, entityNbt, behavior,
+                offsetX, offsetY, size, caption);
+    }
+
+    public static ParsedItemCommand parseItem(String rawInput) {
+        if (rawInput == null) {
+            return null;
+        }
+        Matcher m = ITEM_PATTERN.matcher(rawInput);
+        if (!m.matches()) {
+            return null;
+        }
+        String itemNamespace = m.group(1);
+        String itemPath = m.group(2);
+        CompoundTag itemNbt = parseNbt(m.group(3));
+        String caption = m.group(4) != null ? m.group(4).trim() : "";
+        return new ParsedItemCommand(itemNamespace, itemPath, itemNbt, caption);
+    }
+
+    private static CompoundTag parseNbt(String raw) {
+        if (raw == null || raw.isEmpty()) {
+            return new CompoundTag();
+        }
+        try {
+            return TagParser.parseCompoundFully(raw);
+        } catch (Exception e) {
+            return new CompoundTag();
+        }
+    }
+
+    public static ParsedHandItemCommand parseHandItem(String rawInput) {
+        if (rawInput == null) {
+            return null;
+        }
+        Matcher m = HAND_ITEM_PATTERN.matcher(rawInput);
+        if (!m.matches()) {
+            return null;
+        }
+        String caption = m.group(1) != null ? m.group(1).trim() : "";
+        return new ParsedHandItemCommand(caption);
+    }
+
+    public static ParsedBlockCommand parseBlock(String rawInput) {
+        if (rawInput == null) {
+            return null;
+        }
+        Matcher m = BLOCK_PATTERN.matcher(rawInput);
+        if (!m.matches()) {
+            return null;
+        }
+        String blockNamespace = m.group(1);
+        String blockPath = m.group(2);
+        String blockState = m.group(3) != null ? m.group(3) : "";
+        String caption = m.group(4) != null ? m.group(4).trim() : "";
+        return new ParsedBlockCommand(blockNamespace, blockPath, blockState, caption);
+    }
+
+    public static ParsedLookBlockCommand parseLookBlock(String rawInput) {
+        if (rawInput == null) {
+            return null;
+        }
+        Matcher m = LOOK_BLOCK_PATTERN.matcher(rawInput);
+        if (!m.matches()) {
+            return null;
+        }
+        String caption = m.group(1) != null ? m.group(1).trim() : "";
+        return new ParsedLookBlockCommand(caption);
+    }
+
+    public static ParsedLookEntityCommand parseLookEntity(String rawInput) {
+        if (rawInput == null) {
+            return null;
+        }
+        Matcher m = LOOK_ENTITY_PATTERN.matcher(rawInput);
+        if (!m.matches()) {
+            return null;
+        }
+        String caption = m.group(1) != null ? m.group(1).trim() : "";
+        return new ParsedLookEntityCommand(caption);
+    }
+
+    public static ParsedShortPlayerCommand parseShortPlayer(String rawInput) {
+        if (rawInput == null) {
+            return null;
+        }
+        Matcher m = SHORT_PLAYER_PATTERN.matcher(rawInput);
+        if (!m.matches()) {
+            return null;
+        }
+        String targetPlayerName = m.group(1);
+        String caption = m.group(2) != null ? m.group(2).trim() : "";
+        return new ParsedShortPlayerCommand(targetPlayerName, caption);
+    }
+
+    public static ParsedUuidCommand parseUuid(String rawInput) {
+        if (rawInput == null) {
+            return null;
+        }
+        Matcher m = UUID_PATTERN.matcher(rawInput);
+        if (!m.matches()) {
+            return null;
+        }
+        String uuid = m.group(1);
+        String caption = m.group(2) != null ? m.group(2).trim() : "";
+        return new ParsedUuidCommand(uuid, caption);
+    }
+}

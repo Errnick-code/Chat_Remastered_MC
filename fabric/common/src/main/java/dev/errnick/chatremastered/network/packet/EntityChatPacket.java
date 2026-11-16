@@ -1,0 +1,63 @@
+package dev.errnick.chatremastered.network.packet;
+
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import dev.errnick.chatremastered.network.NetworkComponentJson;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
+
+public record EntityChatPacket(
+        String sender,
+        Component senderComponent,
+        String targetPlayerName,
+        String behavior,
+        String caption,
+        String groupLabel,
+        int bodyRgb
+) implements CustomPacketPayload {
+
+    public static final Identifier ID = Identifier.fromNamespaceAndPath("chat-remastered", "entity_chat");
+    public static final CustomPacketPayload.Type<EntityChatPacket> TYPE = new CustomPacketPayload.Type<>(ID);
+
+    public static final StreamCodec<FriendlyByteBuf, EntityChatPacket> STREAM_CODEC = StreamCodec.of(
+            (buf, pkt) -> {
+                buf.writeUtf(pkt.sender, 64);
+                buf.writeUtf(NetworkComponentJson.toJson(pkt.senderComponent));
+                buf.writeUtf(pkt.targetPlayerName, 16);
+                buf.writeUtf(pkt.behavior, 16);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.caption, 256), 256);
+                buf.writeUtf(NetworkComponentJson.trunc(pkt.groupLabel, 48), 48);
+                buf.writeInt(pkt.bodyRgb);
+            },
+            buf -> new EntityChatPacket(
+                    buf.readUtf(64),
+                    NetworkComponentJson.fromJson(buf.readUtf()),
+                    buf.readUtf(16),
+                    buf.readUtf(16),
+                    buf.readUtf(256),
+                    buf.readUtf(48),
+                    buf.readInt()
+            )
+    );
+
+    public EntityChatPacket(String sender, Component senderComponent, String targetPlayerName,
+                            String behavior, String caption) {
+        this(sender, senderComponent, targetPlayerName, behavior, caption, "", 0);
+    }
+
+    public EntityChatPacket(String targetPlayerName, String behavior, String caption) {
+        this("", Component.literal(""), targetPlayerName, behavior, caption, "", 0);
+    }
+
+    @Override
+    public CustomPacketPayload.Type<EntityChatPacket> type() {
+        return TYPE;
+    }
+
+    public static void register() {
+        PayloadTypeRegistry.serverboundPlay().register(TYPE, STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(TYPE, STREAM_CODEC);
+    }
+}

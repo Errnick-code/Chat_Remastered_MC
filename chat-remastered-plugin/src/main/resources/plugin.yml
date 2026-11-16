@@ -1,0 +1,18 @@
+name: ChatRemasteredPlugin
+version: '${version}'
+main: dev.errnick.chatremasteredplugin.ChatRemasteredPlugin
+api-version: '1.20'
+author: errnick
+description: Chat Remastered server logic ported to Paper
+commands:
+  chatgroup:
+    description: Chat groups
+  chat-remastered:
+    description: Shows Chat Remastered version
+  chat-remastered-admin:
+    description: Chat Remastered admin commands
+    permission: chatremastered.admin
+    usage: /chat-remastered-admin <block-photo|unblock-photo|mute|unmute|delete|test> <player>
+permissions:
+  chatremastered.admin:
+    default: op

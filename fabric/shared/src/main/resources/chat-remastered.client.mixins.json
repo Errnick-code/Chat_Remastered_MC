@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "dev.errnicraft.chatremastered.mixin",
+  "package": "dev.errnick.chatremastered.mixin",
   "id": "chat-remastered",
   "name": "Chat Remastered",
   "compatibilityLevel": "JAVA_21",

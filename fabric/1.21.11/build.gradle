@@ -85,3 +85,8 @@ jar {
 tasks.matching { it.name == 'sourcesJar' }.configureEach {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
+sourceSets {
+    main { java { srcDir file('../.gen/common-id21/src/main/java') } }
+    client { java { srcDir file('../.gen/common-id21/src/client/java') } }
+}

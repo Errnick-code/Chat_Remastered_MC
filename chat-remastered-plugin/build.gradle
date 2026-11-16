@@ -1,0 +1,223 @@
+plugins {
+    id 'java'
+}
+
+group = 'dev.errnick'
+version = '0.5.0'
+
+def minecraftVersion = '1.21.11'
+def mcRange = '1.20-26.2'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.papermc.io/repository/maven-public/' }
+    maven {
+        url 'https://hub.spigotmc.org/nexus/content/groups/public/'
+    }
+}
+
+// bukkit disabled by request (paper-only build)
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+        resources {
+            srcDirs = ['src/main/resources']
+        }
+    }
+    bukkit {
+        java {
+            srcDirs = ['src/bukkit/java']
+        }
+        resources {
+            srcDirs = ['src/bukkit/resources']
+        }
+    }
+}
+
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
+    bukkitCompileOnly 'org.spigotmc:spigot-api:1.21.11-R0.1-SNAPSHOT'
+}
+
+def targetJavaVersion = 21
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release.set(targetJavaVersion)
+}
+
+processResources {
+    filesMatching('plugin.yml') {
+        expand version: version
+    }
+}
+
+tasks.named('processBukkitResources', ProcessResources) {
+    filesMatching('plugin.yml') {
+        expand version: version
+    }
+}
+
+tasks.register('bukkitJar', Jar) {
+    group = 'build'
+    description = 'Builds the plugin JAR against the Bukkit/Spigot API only.'
+    archiveBaseName.set('chat-remastered-bukkit')
+    archiveVersion.set("${version}-mc${mcRange}")
+    from sourceSets.bukkit.output
+}
+
+tasks.named('jar', Jar) {
+    archiveBaseName.set('chat-remastered-paper')
+    archiveVersion.set("${version}-mc${mcRange}")
+}
+
+tasks.register('paperJar') {
+    group = 'build'
+    description = 'Builds the plugin JAR against the Paper API only.'
+    dependsOn tasks.named('jar')
+}
+
+tasks.register('buildAll') {
+    group = 'build'
+    description = 'Builds both the Paper JAR and the Bukkit JAR.'
+    dependsOn tasks.named('paperJar'), tasks.named('bukkitJar')
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('bukkitJar')
+}
+
+def runDir = layout.buildDirectory.dir('run')
+def paperRunDir = runDir.map { it.dir('paper') }
+def bukkitRunDir = runDir.map { it.dir('bukkit') }
+def userAgent = 'chat-remastered-plugin/1.0 (build.gradle)'
+
+tasks.register('downloadPaperServer') {
+    group = 'run server'
+    description = 'Downloads the latest stable Paper server jar for the target Minecraft version.'
+    def outputFile = paperRunDir.map { it.file('paper.jar') }
+    outputs.file(outputFile)
+    doLast {
+        def dest = outputFile.get().asFile
+        dest.parentFile.mkdirs()
+        if (dest.exists()) {
+            logger.lifecycle("Paper server jar already present at ${dest}, skipping download.")
+            return
+        }
+        logger.lifecycle("Fetching latest stable Paper build for Minecraft ${minecraftVersion} ...")
+        def buildsUrl = new URL("https://fill.papermc.io/v3/projects/paper/versions/${minecraftVersion}/builds")
+        def connection = buildsUrl.openConnection()
+        connection.setRequestProperty('User-Agent', userAgent)
+        def json = new groovy.json.JsonSlurper().parse(connection.inputStream)
+        def stable = json.find { it.channel == 'STABLE' } ?: json[0]
+        if (stable == null) {
+            throw new GradleException("No Paper builds found for Minecraft ${minecraftVersion}")
+        }
+        def downloadUrl = stable.downloads['server:default'].url
+        logger.lifecycle("Downloading Paper build ${stable.id} (${stable.channel}) from ${downloadUrl}")
+        def dlConnection = new URL(downloadUrl).openConnection()
+        dlConnection.setRequestProperty('User-Agent', userAgent)
+        dest.withOutputStream { out ->
+            dlConnection.inputStream.withStream { input -> out << input }
+        }
+        logger.lifecycle("Saved to ${dest}")
+    }
+}
+
+tasks.register('downloadBuildTools') {
+    group = 'run server'
+    description = 'Downloads the official SpigotMC BuildTools.jar.'
+    def outputFile = bukkitRunDir.map { it.file('BuildTools.jar') }
+    outputs.file(outputFile)
+    doLast {
+        def dest = outputFile.get().asFile
+        dest.parentFile.mkdirs()
+        if (dest.exists()) {
+            logger.lifecycle("BuildTools.jar already present at ${dest}, skipping download.")
+            return
+        }
+        def url = 'https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar'
+        logger.lifecycle("Downloading BuildTools.jar from ${url}")
+        def connection = new URL(url).openConnection()
+        connection.setRequestProperty('User-Agent', userAgent)
+        dest.withOutputStream { out ->
+            connection.inputStream.withStream { input -> out << input }
+        }
+    }
+}
+
+tasks.register('buildSpigotServer', Exec) {
+    group = 'run server'
+    description = 'Builds the Spigot server jar for the target Minecraft version using BuildTools (slow, one-time).'
+    dependsOn tasks.named('downloadBuildTools')
+    def workDir = bukkitRunDir
+    def spigotJar = workDir.map { it.file("spigot-${minecraftVersion}.jar") }
+    outputs.file(spigotJar)
+    workingDir = workDir.get().asFile
+    commandLine 'java', '-jar', 'BuildTools.jar', '--rev', minecraftVersion
+    onlyIf {
+        !spigotJar.get().asFile.exists()
+    }
+    doFirst {
+        workDir.get().asFile.mkdirs()
+    }
+}
+
+tasks.register('preparePaperServer', Copy) {
+    group = 'run server'
+    description = 'Copies the Paper plugin jar and eula.txt into the Paper run folder.'
+    dependsOn tasks.named('downloadPaperServer'), tasks.named('paperJar')
+    from(tasks.named('jar'))
+    into paperRunDir.map { it.dir('plugins') }
+    doLast {
+        def eula = paperRunDir.get().file('eula.txt').asFile
+        if (!eula.exists()) {
+            eula.text = 'eula=true\n'
+        }
+    }
+}
+
+tasks.register('prepareBukkitServer', Copy) {
+    group = 'run server'
+    description = 'Copies the Bukkit plugin jar and eula.txt into the Bukkit run folder.'
+    dependsOn tasks.named('buildSpigotServer'), tasks.named('bukkitJar')
+    from(tasks.named('bukkitJar'))
+    into bukkitRunDir.map { it.dir('plugins') }
+    doLast {
+        def eula = bukkitRunDir.get().file('eula.txt').asFile
+        if (!eula.exists()) {
+            eula.text = 'eula=true\n'
+        }
+    }
+}
+
+tasks.register('runPaper', Exec) {
+    group = 'run server'
+    description = 'Runs a local Paper server with the plugin installed.'
+    dependsOn tasks.named('preparePaperServer')
+    workingDir = paperRunDir.get().asFile
+    commandLine 'java', '-jar', 'paper.jar', '--nogui'
+    standardInput = System.in
+    doFirst {
+        workingDir.mkdirs()
+    }
+}
+
+tasks.register('runBukkit', Exec) {
+    group = 'run server'
+    description = 'Runs a local Spigot/Bukkit server with the plugin installed.'
+    dependsOn tasks.named('prepareBukkitServer')
+    workingDir = bukkitRunDir.get().asFile
+    commandLine 'java', '-jar', "spigot-${minecraftVersion}.jar", '--nogui'
+    standardInput = System.in
+    doFirst {
+        workingDir.mkdirs()
+    }
+}

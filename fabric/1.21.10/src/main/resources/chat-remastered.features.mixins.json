@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.errnick.chatremastered.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ChatGroupMixin",
+    "ChatIndexInvalidateMixin",
+    "ChatLinkStyleMixin",
+    "ChatRefreshAccessor",
+    "ScreenLinkMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
