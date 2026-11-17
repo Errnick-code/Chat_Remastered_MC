@@ -164,3 +164,34 @@ Type these directly into the chat input to render items, entities, or players in
 > Tip: Right-click any media or message in chat to quickly copy its ID for deletion or management.
 
 </details>
+
+
+---
+
+## ❓ FAQ
+
+**Do all players need this mod installed?**
+Yes, both the server and the clients must have the mod installed to see and send images.
+
+**Does this mod upload images to third-party hosting?**
+No, it uses its own lightweight built-in TCP transfer system directly through your server, keeping your data private.
+
+**Will big images lag the server or cause TPS drops?**
+No. Media transfer runs fully asynchronously on a dedicated TCP port (5050). Traffic peaks at just a few MB/s, and RAM usage is capped at ~100MB.
+
+**How is media stored? Is there an auto-wipe?**
+Images are stored in the server cache as binary files with sender data. To save disk space, they are automatically deleted after 1 day. If an admin or player deletes a message, it is instantly wiped from both server and client caches.
+
+**How does the mute system work?**
+You can completely mute a player (blocking photos and replies) or just restrict them from sending photos. It also has native integration with BanHammer — any active mute there automatically applies to Chat Remastered.
+
+**Will shaders (Iris/Oculus) break the image rendering?**
+No. The chat media render operates as an independent UI element and does not interfere with the 3D world rendering or shader pipelines.
+
+**What happens if a file is corrupted or a packet is lost?**
+The mod doesn't rely on external URLs. If something goes wrong during transmission or rendering, the image is instantly replaced with a clean error placeholder (yellow !).
+
+**Are sent images logged in the server console?**
+Not currently, as the server console only handles text data. Advanced logging features for administrators are planned for future updates.
+
+---

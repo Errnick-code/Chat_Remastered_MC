@@ -183,6 +183,7 @@ public final class ChatRemasteredConfig {
 
     public static void setPreviewScale(float value) {
         previewScale = clamp(value, 0.5f, 2.0f);
+        saveConfig();
     }
 
     public static float getInputPreviewScale() {
@@ -191,6 +192,7 @@ public final class ChatRemasteredConfig {
 
     public static void setInputPreviewScale(float value) {
         inputPreviewScale = clamp(value, 0.5f, 2.0f);
+        saveConfig();
     }
 
     public static boolean getFullscreenChat() {
@@ -199,6 +201,7 @@ public final class ChatRemasteredConfig {
 
     public static void setFullscreenChat(boolean value) {
         fullscreenChat = value;
+        saveConfig();
     }
 
     public static int getClosedChatLines() {
@@ -207,6 +210,7 @@ public final class ChatRemasteredConfig {
 
     public static void setClosedChatLines(int value) {
         closedChatLines = value;
+        saveConfig();
     }
 
     public static boolean getChatSelectionEnabled() {
@@ -215,6 +219,7 @@ public final class ChatRemasteredConfig {
 
     public static void setChatSelectionEnabled(boolean value) {
         chatSelectionEnabled = value;
+        saveConfig();
     }
 
     public static int getLinkColorNormal() {
@@ -223,6 +228,7 @@ public final class ChatRemasteredConfig {
 
     public static void setLinkColorNormal(int value) {
         linkColorNormal = value & 0xFFFFFF;
+        saveConfig();
     }
 
     public static int getLinkColorPressed() {
@@ -231,6 +237,7 @@ public final class ChatRemasteredConfig {
 
     public static void setLinkColorPressed(int value) {
         linkColorPressed = value & 0xFFFFFF;
+        saveConfig();
     }
 
     public static boolean getLinkOpenEnabled() {
@@ -239,6 +246,7 @@ public final class ChatRemasteredConfig {
 
     public static void setLinkOpenEnabled(boolean value) {
         linkOpenEnabled = value;
+        saveConfig();
     }
 
     public static boolean getGroupIdenticalMessages() {
@@ -247,6 +255,7 @@ public final class ChatRemasteredConfig {
 
     public static void setGroupIdenticalMessages(boolean value) {
         groupIdenticalMessages = value;
+        saveConfig();
     }
 
     public static int getChatHistoryLines() {
@@ -255,6 +264,7 @@ public final class ChatRemasteredConfig {
 
     public static void setChatHistoryLines(int value) {
         chatHistoryLines = clamp(value, 200, 30000);
+        saveConfig();
     }
 
     public static boolean getChatHistoryLimitEnabled() {
@@ -263,6 +273,7 @@ public final class ChatRemasteredConfig {
 
     public static void setChatHistoryLimitEnabled(boolean value) {
         chatHistoryLimitEnabled = value;
+        saveConfig();
     }
 
     public static int getChatHistoryLimit() {
@@ -663,15 +674,8 @@ public final class ChatRemasteredConfig {
         };
     }
 
-    public static void reset() {
+    public static void resetSession() {
         resolution = "HD";
-        chatSelectionEnabled = false;
-        linkColorNormal = 0x55AAFF;
-        linkColorPressed = 0xB36BFF;
-        linkOpenEnabled = true;
-        groupIdenticalMessages = false;
-        chatHistoryLines = 2000;
-        chatHistoryLimitEnabled = false;
         serverHost = "";
         imagePort = 5050;
         uploadToken = "";
@@ -686,7 +690,17 @@ public final class ChatRemasteredConfig {
         maxPhotosPerMessage = 1;
         cooldownSeconds = 5;
         cooldownUntilMs = 0L;
+    }
 
+    public static void reset() {
+        resetSession();
+        linkColorNormal = 0x55AAFF;
+        linkColorPressed = 0xB36BFF;
+        linkOpenEnabled = true;
+        groupIdenticalMessages = false;
+        chatHistoryLines = 2000;
+        chatHistoryLimitEnabled = false;
+        chatSelectionEnabled = false;
     }
 
     public static String tr(String key, Object... args) {

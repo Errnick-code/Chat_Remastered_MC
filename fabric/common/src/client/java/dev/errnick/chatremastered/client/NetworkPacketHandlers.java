@@ -73,7 +73,7 @@ public final class NetworkPacketHandlers {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             ImageCache.clear();
             ChatRemasteredStore.clear();
-            ChatRemasteredConfig.reset();
+            ChatRemasteredConfig.resetSession();
         });
     }
 

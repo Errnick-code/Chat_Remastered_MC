@@ -6,6 +6,7 @@ import dev.errnick.chatremasteredplugin.net.MessengerService;
 import dev.errnick.chatremasteredplugin.net.ModProtocol;
 import dev.errnick.chatremasteredplugin.net.packet.ServerHelloPacket;
 import dev.errnick.chatremasteredplugin.tcp.ImageTcpServer;
+import dev.errnick.chatremasteredplugin.util.ServerMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -90,13 +91,14 @@ public final class PluginLifecycle implements Listener {
 
     private static void sendDownloadHint(Player player) {
         String modrinthUrl = "https://modrinth.com/mod/chat-remastered";
+        String locale = player.getLocale();
         Component msg = Component.empty()
                 .append(Component.text("[").color(TextColor.color(0x555555)))
                 .append(Component.text("Chat Remastered").color(TextColor.color(0x00b0f0)).decorate(TextDecoration.BOLD))
                 .append(Component.text("] ").color(TextColor.color(0x555555)))
-                .append(Component.text("This server has Chat Remastered — an enhanced chat mod with photos, replies and more. ")
+                .append(Component.text(ServerMessages.text(locale))
                         .color(TextColor.color(0xaaaaaa)))
-                .append(Component.text("\u2B07 Download here")
+                .append(Component.text(" \u2B07 " + ServerMessages.button(locale))
                         .color(TextColor.color(0x1bd96a))
                         .decorate(TextDecoration.BOLD, TextDecoration.UNDERLINED)
                         .clickEvent(ClickEvent.openUrl(modrinthUrl))

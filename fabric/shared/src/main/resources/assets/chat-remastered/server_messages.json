@@ -1,0 +1,134 @@
+{
+    "ar_sa": {
+        "text": "الصور والردود داخل الدردشة مباشرة.",
+        "button": "تحميل"
+    },
+    "bg_bg": {
+        "text": "Снимки и отговори направо в чата.",
+        "button": "Изтегли"
+    },
+    "cs_cz": {
+        "text": "Fotky a odpovědi přímo v chatu.",
+        "button": "Stáhnout"
+    },
+    "da_dk": {
+        "text": "Billeder og svar direkte i chatten.",
+        "button": "Download"
+    },
+    "de_de": {
+        "text": "Fotos und Antworten direkt im Chat.",
+        "button": "Herunterladen"
+    },
+    "el_gr": {
+        "text": "Φωτογραφίες και απαντήσεις μέσα στη συνομιλία.",
+        "button": "Λήψη"
+    },
+    "en_us": {
+        "text": "Photos and replies right in chat.",
+        "button": "Download"
+    },
+    "es_es": {
+        "text": "Fotos y respuestas directamente en el chat.",
+        "button": "Descargar"
+    },
+    "es_mx": {
+        "text": "Fotos y respuestas directo en el chat.",
+        "button": "Descargar"
+    },
+    "fi_fi": {
+        "text": "Kuvat ja vastaukset suoraan chatissa.",
+        "button": "Lataa"
+    },
+    "fr_fr": {
+        "text": "Photos et réponses directement dans le chat.",
+        "button": "Télécharger"
+    },
+    "he_il": {
+        "text": "תמונות ותגובות ישר בצ'אט.",
+        "button": "הורדה"
+    },
+    "hi_in": {
+        "text": "फ़ोटो और जवाब सीधे चैट में।",
+        "button": "डाउनलोड"
+    },
+    "hu_hu": {
+        "text": "Fotók és válaszok egyenesen a chatben.",
+        "button": "Letöltés"
+    },
+    "id_id": {
+        "text": "Foto dan balasan langsung di chat.",
+        "button": "Unduh"
+    },
+    "it_it": {
+        "text": "Foto e risposte direttamente in chat.",
+        "button": "Scarica"
+    },
+    "ja_jp": {
+        "text": "写真も返信も、チャットでそのまま。",
+        "button": "ダウンロード"
+    },
+    "ko_kr": {
+        "text": "사진과 답장을 채팅에서 바로.",
+        "button": "다운로드"
+    },
+    "nb_no": {
+        "text": "Bilder og svar rett i chatten.",
+        "button": "Last ned"
+    },
+    "nl_nl": {
+        "text": "Foto's en reacties gewoon in de chat.",
+        "button": "Downloaden"
+    },
+    "pl_pl": {
+        "text": "Zdjęcia i odpowiedzi prosto na czacie.",
+        "button": "Pobierz"
+    },
+    "pt_br": {
+        "text": "Fotos e respostas direto no chat.",
+        "button": "Baixar"
+    },
+    "pt_pt": {
+        "text": "Fotos e respostas diretamente no chat.",
+        "button": "Transferir"
+    },
+    "ro_ro": {
+        "text": "Poze și răspunsuri direct în chat.",
+        "button": "Descarcă"
+    },
+    "ru_ru": {
+        "text": "Фото и ответы прямо в чате.",
+        "button": "Скачать"
+    },
+    "sk_sk": {
+        "text": "Fotky a odpovede priamo v chate.",
+        "button": "Stiahnuť"
+    },
+    "sv_se": {
+        "text": "Foton och svar direkt i chatten.",
+        "button": "Ladda ner"
+    },
+    "th_th": {
+        "text": "รูปและตอบกลับในแชทเลย",
+        "button": "ดาวน์โหลด"
+    },
+    "tr_tr": {
+        "text": "Fotoğraflar ve yanıtlar doğrudan sohbette.",
+        "button": "İndir"
+    },
+    "uk_ua": {
+        "text": "Фото й відповіді просто в чаті.",
+        "button": "Завантажити"
+    },
+    "vi_vn": {
+        "text": "Ảnh và trả lời ngay trong chat.",
+        "button": "Tải về"
+    },
+    "zh_cn": {
+        "text": "图片和回复，直接在聊天里。",
+        "button": "下载"
+    },
+    "zh_tw": {
+        "text": "圖片和回覆，直接在聊天裡。",
+        "button": "下載"
+    }
+}

@@ -87,7 +87,7 @@ public final class ChatSelection {
             line = clampLine(mc, mouseY);
             if (line < 0) return;
             focusLine = line;
-            focusCol = mouseY < chatTopGui(mc) ? Math.max(0, colStarts(mc, line).length - 1) : 0;
+            focusCol = mouseY < chatTopGui(mc) ? 0 : Math.max(0, colStarts(mc, line).length - 1);
             return;
         }
         focusLine = line;
@@ -118,7 +118,7 @@ public final class ChatSelection {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         boolean prevWrapped = false;
-        for (int i = fromLine; i <= toLine; i++) {
+        for (int i = fromLine; i >= toLine; i--) {
             String text = lineText(mc, i);
             int len = codePointCount(text);
             int start = (i == fromLine) ? Math.min(fromCol, len) : 0;
@@ -176,7 +176,7 @@ public final class ChatSelection {
         int visible = Math.min(trimmed.size() - scrollPos, linesPerPage);
         for (int i = 0; i < visible; i++) {
             int idx = i + scrollPos;
-            if (idx < fromLine || idx > toLine) continue;
+            if (idx > fromLine || idx < toLine) continue;
             int[] xs = colStarts(mc, idx);
             int len = xs.length - 1;
             int start = (idx == fromLine) ? Math.min(fromCol, len) : 0;
@@ -216,7 +216,7 @@ public final class ChatSelection {
         int visible = Math.min(trimmed.size() - scrollPos, linesPerPage);
         for (int i = 0; i < visible; i++) {
             int idx = i + scrollPos;
-            if (idx < fromLine || idx > toLine) continue;
+            if (idx > fromLine || idx < toLine) continue;
             int[] xs = colStarts(mc, idx);
             int len = xs.length - 1;
             int start = (idx == fromLine) ? Math.min(fromCol, len) : 0;
@@ -301,7 +301,7 @@ public final class ChatSelection {
     }
 
     private static boolean isForward() {
-        return anchorLine < focusLine || (anchorLine == focusLine && anchorCol <= focusCol);
+        return anchorLine > focusLine || (anchorLine == focusLine && anchorCol <= focusCol);
     }
 
     private static String lineText(Minecraft mc, int lineIdx) {

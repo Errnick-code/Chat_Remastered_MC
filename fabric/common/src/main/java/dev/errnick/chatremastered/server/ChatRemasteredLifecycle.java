@@ -147,13 +147,13 @@ public final class ChatRemasteredLifecycle {
 
     private static void sendDownloadHint(ServerPlayer player) {
         String modrinthUrl = "https://modrinth.com/mod/chat-remastered";
+        String locale = player.clientInformation().language();
         Component msg = Component.empty()
                 .append(Component.literal("[").withStyle(s -> s.withColor(0x555555)))
                 .append(Component.literal("Chat Remastered").withStyle(s -> s.withColor(0x00b0f0).withBold(true)))
                 .append(Component.literal("] ").withStyle(s -> s.withColor(0x555555)))
-                .append(Component.literal("This server has Chat Remastered — an enhanced chat mod with photos, replies and more. ")
-                        .withStyle(s -> s.withColor(0xaaaaaa)))
-                .append(Component.literal("⬇ Download here").withStyle(s -> s
+                .append(Component.literal(ServerMessages.text(locale)).withStyle(s -> s.withColor(0xaaaaaa)))
+                .append(Component.literal(" ⬇ " + ServerMessages.button(locale)).withStyle(s -> s
                         .withColor(0x1bd96a)
                         .withBold(true)
                         .withUnderlined(true)

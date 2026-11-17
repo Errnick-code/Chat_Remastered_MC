@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'dev.errnick'
-version = '0.5.0'
+version = '0.5.1'
 
 def minecraftVersion = '1.21.11'
 def mcRange = '1.20-26.2'
@@ -26,18 +26,18 @@ repositories {
 sourceSets {
     main {
         java {
-            srcDirs = ['src/main/java']
+            srcDirs = ['src/main/java', 'src/shared/java']
         }
         resources {
-            srcDirs = ['src/main/resources']
+            srcDirs = ['src/main/resources', 'src/shared/resources']
         }
     }
     bukkit {
         java {
-            srcDirs = ['src/bukkit/java']
+            srcDirs = ['src/bukkit/java', 'src/shared/java']
         }
         resources {
-            srcDirs = ['src/bukkit/resources']
+            srcDirs = ['src/bukkit/resources', 'src/shared/resources']
         }
     }
 }

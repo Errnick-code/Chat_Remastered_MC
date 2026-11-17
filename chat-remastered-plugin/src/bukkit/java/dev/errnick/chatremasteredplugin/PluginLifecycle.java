@@ -6,6 +6,7 @@ import dev.errnick.chatremasteredplugin.net.MessengerService;
 import dev.errnick.chatremasteredplugin.net.ModProtocol;
 import dev.errnick.chatremasteredplugin.net.packet.ServerHelloPacket;
 import dev.errnick.chatremasteredplugin.tcp.ImageTcpServer;
+import dev.errnick.chatremasteredplugin.util.ServerMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -85,7 +86,8 @@ public final class PluginLifecycle implements Listener {
     }
 
     private static void sendDownloadHint(Player player) {
-        player.sendMessage(ChatColor.GRAY + "[Chat Remastered] This server has an enhanced chat mod with photos, replies and more.");
-        player.sendMessage(ChatColor.DARK_GRAY + "Mod: https://modrinth.com/mod/chat-remastered");
+        String locale = player.getLocale();
+        player.sendMessage(ChatColor.GRAY + "[Chat Remastered] " + ServerMessages.text(locale));
+        player.sendMessage(ChatColor.DARK_GRAY + ServerMessages.button(locale) + ": https://modrinth.com/mod/chat-remastered");
     }
 }
