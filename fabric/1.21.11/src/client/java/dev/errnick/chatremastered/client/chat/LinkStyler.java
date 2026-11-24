@@ -96,7 +96,7 @@ public final class LinkStyler {
         if (text == null || text.isEmpty()) {
             return false;
         }
-        return URL_PATTERN.matcher(text).find();
+        return findUrl(text) != null;
     }
 
     public static String findUrl(String text) {
@@ -116,7 +116,10 @@ public final class LinkStyler {
             int start = matcher.start();
             int end = trimTrailing(text, start, matcher.end());
             if (end > start) {
-                return text.substring(start, end);
+                String candidate = text.substring(start, end);
+                if (isPlausibleUrl(candidate)) {
+                    return candidate;
+                }
             }
             matcher.region(start + 1, text.length());
         }
@@ -139,10 +142,15 @@ public final class LinkStyler {
                 index = start + 1;
                 continue;
             }
+            String candidate = text.substring(start, end);
+            if (!isPlausibleUrl(candidate)) {
+                index = start + 1;
+                continue;
+            }
             if (start > index) {
                 result.append(Component.literal(text.substring(index, start)).withStyle(baseStyle));
             }
-            result.append(linkComponent(text.substring(start, end), baseStyle));
+            result.append(linkComponent(candidate, baseStyle));
             index = end;
         }
 
@@ -161,6 +169,93 @@ public final class LinkStyler {
         return Component.literal(link).withStyle(style);
     }
 
+    public static boolean isPlausibleUrl(String candidate) {
+        if (candidate == null || candidate.isEmpty()) {
+            return false;
+        }
+        String lower = candidate.toLowerCase(java.util.Locale.ROOT);
+        if (lower.startsWith("http://") || lower.startsWith("https://") || lower.startsWith("www.")) {
+            return true;
+        }
+        int cut = candidate.length();
+        int slash = candidate.indexOf('/');
+        if (slash >= 0) {
+            cut = slash;
+        }
+        String authority = candidate.substring(0, cut);
+        int colon = authority.lastIndexOf(':');
+        if (colon >= 0) {
+            String port = authority.substring(colon + 1);
+            if (!isValidPort(port)) {
+                return false;
+            }
+            authority = authority.substring(0, colon);
+        }
+        return isRealHost(authority, slash >= 0);
+    }
+
+    private static boolean isValidPort(String port) {
+        if (port.isEmpty() || port.length() > 5) {
+            return false;
+        }
+        int value = 0;
+        for (int i = 0; i < port.length(); i++) {
+            char ch = port.charAt(i);
+            if (ch < '0' || ch > '9') {
+                return false;
+            }
+            value = value * 10 + (ch - '0');
+        }
+        return value >= 1 && value <= 65535;
+    }
+
+    private static final java.util.Set<String> FILE_LIKE_SUFFIXES = java.util.Set.of(
+            "zip", "mov", "app", "dev", "sh", "md", "rs", "so", "py", "js", "ts", "run");
+
+    private static boolean isRealHost(String host, boolean hasPath) {
+        if (host == null || host.isEmpty() || host.indexOf('_') >= 0) {
+            return false;
+        }
+        if (isIpv4(host)) {
+            return true;
+        }
+        try {
+            com.google.common.net.InternetDomainName name = com.google.common.net.InternetDomainName.from(host);
+            if (!name.isUnderPublicSuffix() || name.isPublicSuffix()) {
+                return false;
+            }
+            if (!hasPath) {
+                String tld = name.publicSuffix().toString().toLowerCase(java.util.Locale.ROOT);
+                if (FILE_LIKE_SUFFIXES.contains(tld)) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private static boolean isIpv4(String host) {
+        String[] parts = host.split("\\.");
+        if (parts.length != 4) {
+            return false;
+        }
+        for (String part : parts) {
+            if (part.isEmpty() || part.length() > 3) {
+                return false;
+            }
+            for (int i = 0; i < part.length(); i++) {
+                if (!Character.isDigit(part.charAt(i))) {
+                    return false;
+                }
+            }
+            if (Integer.parseInt(part) > 255) {
+                return false;
+            }
+        }
+        return true;
+    }
     private static int trimTrailing(String text, int start, int end) {
         int result = end;
         while (result > start && TRAILING_CHARS.indexOf(text.charAt(result - 1)) >= 0) {

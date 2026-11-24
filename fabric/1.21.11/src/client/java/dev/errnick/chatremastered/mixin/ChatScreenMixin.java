@@ -75,7 +75,14 @@ public class ChatScreenMixin {
 
     private int cr$pendingStripScrollX = 0;
 
-    private final PendingCardAnimator cr$pendingAnim = new PendingCardAnimator();
+    private PendingCardAnimator cr$pendingAnim;
+
+    private PendingCardAnimator cr$anim() {
+        if (cr$pendingAnim == null) {
+            cr$pendingAnim = new PendingCardAnimator();
+        }
+        return cr$pendingAnim;
+    }
 
     private static final Identifier PLACEHOLDER_TEX =
             Identifier.fromNamespaceAndPath("chat-remastered", "textures/placeholder.png");
@@ -198,7 +205,14 @@ public class ChatScreenMixin {
     @Shadow
     protected EditBox input;
 
-    private final dev.errnick.chatremastered.ScreenshotsPanel cr$screenshotsPanel = new dev.errnick.chatremastered.ScreenshotsPanel();
+    private dev.errnick.chatremastered.ScreenshotsPanel cr$screenshotsPanel = new dev.errnick.chatremastered.ScreenshotsPanel();
+
+    private dev.errnick.chatremastered.ScreenshotsPanel cr$panel() {
+        if (cr$screenshotsPanel == null) {
+            cr$screenshotsPanel = new dev.errnick.chatremastered.ScreenshotsPanel();
+        }
+        return cr$screenshotsPanel;
+    }
 
     private boolean canSendPhoto() {
         return ChatRemasteredConfig.getServerHasModVersion() != null
@@ -323,7 +337,7 @@ public class ChatScreenMixin {
             grpTex = hoverGrp ? GROUP_GLOBAL_HOVER_TEX : GROUP_GLOBAL_TEX;
         }
         graphics.blit(RenderPipelines.GUI_TEXTURED, grpTex, grpBtnX, grpBtnY, 0f, 0f, GRP_BTN_W, GRP_BTN_H, GRP_BTN_W, GRP_BTN_H);
-        if (!cr$screenshotsPanel.isOpen()) {
+        if (!cr$panel().isOpen()) {
         java.util.List<Component> cr$tip = null;
         if (hoverGrp) {
             cr$tip = new java.util.ArrayList<>();
@@ -353,16 +367,16 @@ public class ChatScreenMixin {
         }
         }
 
-        cr$pendingAnim.tickRemovals();
+        cr$anim().tickRemovals();
         java.util.List<PendingImageState.PendingImage> pendingAllRaw = PendingImageState.getAll();
         java.util.List<PendingImageState.PendingImage> pendingAll = new java.util.ArrayList<>();
         for (PendingImageState.PendingImage p : pendingAllRaw) {
-            if (!cr$pendingAnim.isFlying(p.getUid())) {
+            if (!cr$anim().isFlying(p.getUid())) {
                 pendingAll.add(p);
             }
         }
-        java.util.List<PendingCardAnimator.RemoveState> activeRemovals = cr$pendingAnim.getActiveRemovals(self.height);
-        cr$pendingAnim.syncSpawns(pendingAll);
+        java.util.List<PendingCardAnimator.RemoveState> activeRemovals = cr$anim().getActiveRemovals(self.height);
+        cr$anim().syncSpawns(pendingAll);
 
         if (pendingAll.isEmpty() && activeRemovals.isEmpty()) {
             cr$pendingStripScrollX = 0;
@@ -370,7 +384,7 @@ public class ChatScreenMixin {
             ReplyBarRenderer.renderReplyOverMessage(graphics, mc, self, mouseX, mouseY, cr$replyBarAnim, cr$replyImageId, cr$replyText, cr$replySenderName);
             chatremastered$updateCursorAndHover(graphics, mc, mouseX, mouseY);
             chatremastered$renderMenu(graphics, mc, mouseX, mouseY);
-            cr$screenshotsPanel.render(graphics, self.width, self.height, mouseX, mouseY);
+            cr$panel().render(graphics, self.width, self.height, mouseX, mouseY);
             return;
         }
 
@@ -391,8 +405,8 @@ public class ChatScreenMixin {
         int cardX = rowLeft - cr$pendingStripScrollX;
         for (int i = 0; i < pendingAll.size(); i++) {
             PendingImageState.PendingImage card = pendingAll.get(i);
-            int smoothedX = cr$pendingAnim.smoothX(card.getUid(), cardX);
-            PendingCardAnimator.SpawnState spawn = cr$pendingAnim.getSpawn(card.getUid());
+            int smoothedX = cr$anim().smoothX(card.getUid(), cardX);
+            PendingCardAnimator.SpawnState spawn = cr$anim().getSpawn(card.getUid());
             int cardW = PendingCardRenderer.renderPendingCard(graphics, mc, mouseX, mouseY, card, smoothedX, rowBottom, spawn);
             cardX += cardW + PENDING_STRIP_GAP;
         }
@@ -411,7 +425,7 @@ public class ChatScreenMixin {
         if (cr$tagCommandSuggestions != null) {
             cr$tagCommandSuggestions.render(graphics, mouseX, mouseY);
         }
-        cr$screenshotsPanel.render(graphics, self.width, self.height, mouseX, mouseY);
+        cr$panel().render(graphics, self.width, self.height, mouseX, mouseY);
     }
 
     private static PendingImageState.PendingImage pending() {
@@ -876,9 +890,9 @@ public class ChatScreenMixin {
 
     @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
     private void chatremastered$handleMouseScrolled(double mx, double my, double scrollX, double scrollY, CallbackInfoReturnable<Boolean> cir) {
-        if (cr$screenshotsPanel.isOpen()) {
+        if (cr$panel().isOpen()) {
             ChatScreen selfPanel = (ChatScreen)(Object)this;
-            if (cr$screenshotsPanel.mouseScrolled(selfPanel.width, selfPanel.height, mx, my, scrollY)) {
+            if (cr$panel().mouseScrolled(selfPanel.width, selfPanel.height, mx, my, scrollY)) {
                 cir.setReturnValue(true);
                 return;
             }
@@ -963,8 +977,8 @@ public class ChatScreenMixin {
         ChatScreen self = (ChatScreen)(Object)this;
         Minecraft mc = Minecraft.getInstance();
 
-        if (cr$screenshotsPanel.isOpen()
-                && cr$screenshotsPanel.mouseClicked(self.width, self.height, mx, my, event.button())) {
+        if (cr$panel().isOpen()
+                && cr$panel().mouseClicked(self.width, self.height, mx, my, event.button())) {
             cir.setReturnValue(true);
             return;
         }
@@ -1057,7 +1071,7 @@ public class ChatScreenMixin {
 
         if (mx >= scrBtnX && mx < scrBtnX + SCR_BTN_W && my >= scrBtnY && my < scrBtnY + SCR_BTN_H) {
             mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
-            cr$screenshotsPanel.toggle();
+            cr$panel().toggle();
             cir.setReturnValue(true);
             return;
         }
@@ -1073,19 +1087,19 @@ public class ChatScreenMixin {
         List<PendingImageState.PendingImage> pendingAllRaw3 = PendingImageState.getAll();
         List<PendingImageState.PendingImage> pendingAll = new java.util.ArrayList<>();
         for (PendingImageState.PendingImage p : pendingAllRaw3) {
-            if (!cr$pendingAnim.isFlying(p.getUid())) {
+            if (!cr$anim().isFlying(p.getUid())) {
                 pendingAll.add(p);
             }
         }
         if (!pendingAll.isEmpty()) {
             int rowBottom = inputBarTop - 6 - ReplyBarRenderer.getPendingPreviewAreaHeight(cr$replyBarAnim);
             int cardX = 4 - cr$pendingStripScrollX;
-            boolean removalInProgress = !cr$pendingAnim.getActiveRemovals(self.height).isEmpty();
+            boolean removalInProgress = !cr$anim().getActiveRemovals(self.height).isEmpty();
             for (int i = 0; i < pendingAll.size(); i++) {
                 PendingImageState.PendingImage card = pendingAll.get(i);
                 int dispW = card.getWidth();
                 int dispH = card.getHeight();
-                int smoothedCardX = cr$pendingAnim.peekSmoothX(card.getUid(), cardX);
+                int smoothedCardX = cr$anim().peekSmoothX(card.getUid(), cardX);
                 int cardTop = rowBottom - dispH;
                 int closeSize = 14;
                 int closeX = smoothedCardX + dispW - closeSize - 2;
@@ -1095,7 +1109,7 @@ public class ChatScreenMixin {
                         cir.setReturnValue(true);
                         return;
                     }
-                    cr$pendingAnim.startRemoval(card.getUid(), smoothedCardX, cardTop, dispW, dispH,
+                    cr$anim().startRemoval(card.getUid(), smoothedCardX, cardTop, dispW, dispH,
                             card.getTextureId(), card.getTextureWidth(), card.getTextureHeight(), card.isLoaded(),
                             card.getSizeKnown(), card.getProgress());
                     cir.setReturnValue(true);
@@ -1362,8 +1376,8 @@ public class ChatScreenMixin {
             cr$tagCommandSuggestions.hide();
         }
         cr$tagSuggestionsForText = null;
-        cr$screenshotsPanel.close();
-        cr$screenshotsPanel.releaseAll();
+        cr$panel().close();
+        cr$panel().releaseAll();
         GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().handle(), 0L);
     }
 

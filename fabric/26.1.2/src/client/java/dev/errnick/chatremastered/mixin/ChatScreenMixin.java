@@ -62,7 +62,14 @@ public class ChatScreenMixin {
 
     private int cr$pendingStripScrollX = 0;
 
-    private PendingCardAnimator cr$pendingAnim = new PendingCardAnimator();
+    private PendingCardAnimator cr$pendingAnim;
+
+    private PendingCardAnimator cr$anim() {
+        if (cr$pendingAnim == null) {
+            cr$pendingAnim = new PendingCardAnimator();
+        }
+        return cr$pendingAnim;
+    }
 
     private static final Identifier PLACEHOLDER_TEX =
             Identifier.fromNamespaceAndPath("chat-remastered", "textures/placeholder.png");
@@ -215,6 +222,13 @@ public class ChatScreenMixin {
 
     private dev.errnick.chatremastered.ScreenshotsPanel cr$screenshotsPanel = new dev.errnick.chatremastered.ScreenshotsPanel();
 
+    private dev.errnick.chatremastered.ScreenshotsPanel cr$panel() {
+        if (cr$screenshotsPanel == null) {
+            cr$screenshotsPanel = new dev.errnick.chatremastered.ScreenshotsPanel();
+        }
+        return cr$screenshotsPanel;
+    }
+
     @Inject(method = "<init>", at = @At("TAIL"))
     private void cr$initState(CallbackInfo ci) {
         cr$pendingAnim = new PendingCardAnimator();
@@ -352,7 +366,7 @@ int btnW = CAM_BTN_W;
         graphics.blit(RenderPipelines.GUI_TEXTURED, scrTex, colL, rowB, 0f, 0f, btnW, btnH, btnW, btnH);
         graphics.blit(RenderPipelines.GUI_TEXTURED, camTex, colR, rowB, 0f, 0f, btnW, btnH, btnW, btnH);
 
-        if (!cr$screenshotsPanel.isOpen()) {
+        if (!cr$panel().isOpen()) {
         java.util.List<Component> cr$tip = null;
         if (hoverGrp) {
             cr$tip = new java.util.ArrayList<>();
@@ -381,16 +395,16 @@ int btnW = CAM_BTN_W;
             graphics.setComponentTooltipForNextFrame(mc.font, cr$tip, mouseX, mouseY);
         }
         }
-        cr$pendingAnim.tickRemovals();
+        cr$anim().tickRemovals();
         java.util.List<PendingImageState.PendingImage> pendingAllRaw = PendingImageState.getAll();
         java.util.List<PendingImageState.PendingImage> pendingAll = new java.util.ArrayList<>();
         for (PendingImageState.PendingImage p : pendingAllRaw) {
-            if (!cr$pendingAnim.isFlying(p.getUid())) {
+            if (!cr$anim().isFlying(p.getUid())) {
                 pendingAll.add(p);
             }
         }
-        java.util.List<PendingCardAnimator.RemoveState> activeRemovals = cr$pendingAnim.getActiveRemovals(self.height);
-        cr$pendingAnim.syncSpawns(pendingAll);
+        java.util.List<PendingCardAnimator.RemoveState> activeRemovals = cr$anim().getActiveRemovals(self.height);
+        cr$anim().syncSpawns(pendingAll);
 
         if (pendingAll.isEmpty() && activeRemovals.isEmpty()) {
             cr$pendingStripScrollX = 0;
@@ -398,7 +412,7 @@ int btnW = CAM_BTN_W;
             ReplyBarRenderer.renderReplyOverMessage(graphics, mc, self, mouseX, mouseY, cr$replyBarAnim, cr$replyImageId, cr$replyText, cr$replySenderName);
             chatremastered$updateCursorAndHover(graphics, mc, mouseX, mouseY);
             chatremastered$renderMenu(graphics, mc, mouseX, mouseY);
-            cr$screenshotsPanel.render(graphics, self.width, self.height, mouseX, mouseY);
+            cr$panel().render(graphics, self.width, self.height, mouseX, mouseY);
             return;
         }
 
@@ -420,8 +434,8 @@ int btnW = CAM_BTN_W;
         int cardX = rowLeft - cr$pendingStripScrollX;
         for (int i = 0; i < pendingAll.size(); i++) {
             PendingImageState.PendingImage card = pendingAll.get(i);
-            int smoothedX = cr$pendingAnim.smoothX(card.getUid(), cardX);
-            PendingCardAnimator.SpawnState spawn = cr$pendingAnim.getSpawn(card.getUid());
+            int smoothedX = cr$anim().smoothX(card.getUid(), cardX);
+            PendingCardAnimator.SpawnState spawn = cr$anim().getSpawn(card.getUid());
             int cardW = PendingCardRenderer.renderPendingCard(graphics, mc, mouseX, mouseY, card, smoothedX, rowBottom, spawn);
             cardX += cardW + PENDING_STRIP_GAP;
         }
@@ -440,7 +454,7 @@ int btnW = CAM_BTN_W;
         if (cr$tagCommandSuggestions != null) {
             cr$tagCommandSuggestions.extractRenderState(graphics, mouseX, mouseY);
         }
-        cr$screenshotsPanel.render(graphics, self.width, self.height, mouseX, mouseY);
+        cr$panel().render(graphics, self.width, self.height, mouseX, mouseY);
     }
 
     private static PendingImageState.PendingImage pending() {
@@ -905,9 +919,9 @@ int btnW = CAM_BTN_W;
 
     @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
     private void chatremastered$handleMouseScrolled(double mx, double my, double scrollX, double scrollY, CallbackInfoReturnable<Boolean> cir) {
-        if (cr$screenshotsPanel.isOpen()) {
+        if (cr$panel().isOpen()) {
             ChatScreen selfPanel = (ChatScreen)(Object)this;
-            if (cr$screenshotsPanel.mouseScrolled(selfPanel.width, selfPanel.height, mx, my, scrollY)) {
+            if (cr$panel().mouseScrolled(selfPanel.width, selfPanel.height, mx, my, scrollY)) {
                 cir.setReturnValue(true);
                 return;
             }
@@ -992,8 +1006,8 @@ int btnW = CAM_BTN_W;
         ChatScreen self = (ChatScreen)(Object)this;
         Minecraft mc = Minecraft.getInstance();
 
-        if (cr$screenshotsPanel.isOpen()
-                && cr$screenshotsPanel.mouseClicked(self.width, self.height, mx, my, event.button())) {
+        if (cr$panel().isOpen()
+                && cr$panel().mouseClicked(self.width, self.height, mx, my, event.button())) {
             cir.setReturnValue(true);
             return;
         }
@@ -1078,7 +1092,7 @@ int btnW2 = CAM_BTN_W;
 
         if (mx >= colL && mx < colL + SCR_BTN_W && my >= rowB && my < rowB + SCR_BTN_H) {
             mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
-            cr$screenshotsPanel.toggle();
+            cr$panel().toggle();
             cir.setReturnValue(true);
             return;
         }
@@ -1094,7 +1108,7 @@ int btnW2 = CAM_BTN_W;
         List<PendingImageState.PendingImage> pendingAllRaw3 = PendingImageState.getAll();
         List<PendingImageState.PendingImage> pendingAll = new java.util.ArrayList<>();
         for (PendingImageState.PendingImage p : pendingAllRaw3) {
-            if (!cr$pendingAnim.isFlying(p.getUid())) {
+            if (!cr$anim().isFlying(p.getUid())) {
                 pendingAll.add(p);
             }
         }
@@ -1102,12 +1116,12 @@ int btnW2 = CAM_BTN_W;
         int inputBarTop = self.height - 12;
         int rowBottom = inputBarTop - 6 - ReplyBarRenderer.getPendingPreviewAreaHeight(cr$replyBarAnim);
             int cardX = 4 - cr$pendingStripScrollX;
-            boolean removalInProgress = !cr$pendingAnim.getActiveRemovals(self.height).isEmpty();
+            boolean removalInProgress = !cr$anim().getActiveRemovals(self.height).isEmpty();
             for (int i = 0; i < pendingAll.size(); i++) {
                 PendingImageState.PendingImage card = pendingAll.get(i);
                 int dispW = card.getWidth();
                 int dispH = card.getHeight();
-                int smoothedCardX = cr$pendingAnim.peekSmoothX(card.getUid(), cardX);
+                int smoothedCardX = cr$anim().peekSmoothX(card.getUid(), cardX);
                 int cardTop = rowBottom - dispH;
                 int closeSize = 14;
                 int closeX = smoothedCardX + dispW - closeSize - 2;
@@ -1117,7 +1131,7 @@ int btnW2 = CAM_BTN_W;
                         cir.setReturnValue(true);
                         return;
                     }
-                    cr$pendingAnim.startRemoval(card.getUid(), smoothedCardX, cardTop, dispW, dispH,
+                    cr$anim().startRemoval(card.getUid(), smoothedCardX, cardTop, dispW, dispH,
                             card.getTextureId(), card.getTextureWidth(), card.getTextureHeight(), card.isLoaded(),
                             card.getSizeKnown(), card.getProgress());
                     cir.setReturnValue(true);
@@ -1384,8 +1398,8 @@ int btnW2 = CAM_BTN_W;
             cr$tagCommandSuggestions.hide();
         }
         cr$tagSuggestionsForText = null;
-        cr$screenshotsPanel.close();
-        cr$screenshotsPanel.releaseAll();
+        cr$panel().close();
+        cr$panel().releaseAll();
         GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().handle(), 0L);
     }
 

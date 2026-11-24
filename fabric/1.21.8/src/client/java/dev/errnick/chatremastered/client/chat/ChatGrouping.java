@@ -7,6 +7,7 @@ import dev.errnick.chatremastered.mixin.ChatComponentAccessor;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.network.chat.Component;
 
 import java.util.Iterator;
@@ -49,7 +50,10 @@ public final class ChatGrouping {
         if (ChatRemasteredStore.getReplyForAddedTime(headAddedTime) != null) {
             return false;
         }
-        COUNTS.merge(headAddedTime, 1, Integer::sum);
+        int count = COUNTS.merge(headAddedTime, 1, Integer::sum);
+        if (!cr$chatOpen()) {
+            cr$bumpGroup(count);
+        }
         return true;
     }
 
@@ -88,6 +92,52 @@ public final class ChatGrouping {
         headAddedTime = Integer.MIN_VALUE;
     }
 
+
+    private static boolean cr$chatOpen() {
+        return Minecraft.getInstance().screen instanceof ChatScreen;
+    }
+
+
+    private static void cr$bumpGroup(int count) {
+        List<GuiMessage.Line> trimmed = trimmedLines();
+        if (trimmed == null) {
+            return;
+        }
+        Minecraft mc = Minecraft.getInstance();
+        if (mc == null || mc.gui == null) {
+            return;
+        }
+        final int oldTime = headAddedTime;
+        ChatComponentAccessor acc = (ChatComponentAccessor) mc.gui.getChat();
+        List<GuiMessage> all = acc.getAllMessages();
+        GuiMessage root = null;
+        for (GuiMessage message : all) {
+            if (message.addedTime() == oldTime) {
+                root = message;
+                break;
+            }
+        }
+        if (root == null) {
+            return;
+        }
+        int newTime = Math.max(mc.gui.getGuiTicks(), oldTime + 1);
+        while (ChatLineIndex.contains(trimmed, newTime)) {
+            newTime++;
+        }
+        GuiMessage fresh = new GuiMessage(newTime, root.content(), root.signature(), root.tag());
+        trimmed.removeIf(line -> line.addedTime() == oldTime);
+        for (int i = all.size() - 1; i >= 0; i--) {
+            if (all.get(i).addedTime() == oldTime) {
+                all.remove(i);
+            }
+        }
+        acc.cr$addToDisplayQueue(fresh);
+        acc.cr$addToQueue(fresh);
+        ChatLineIndex.invalidate();
+        COUNTS.remove(oldTime);
+        COUNTS.put(newTime, count);
+        headAddedTime = newTime;
+    }
     private static boolean eligible(Component message, GuiMessageTag tag) {
         if (message == null) {
             return false;
